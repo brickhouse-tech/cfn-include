@@ -1,0 +1,76 @@
+subNow:
+  - name: Fn::SubNow substitutes variables immediately with string format
+    template:
+      Fn::SubNow: "arn:aws:s3:::my-bucket-${BucketSuffix}"
+    inject:
+      BucketSuffix: "12345"
+    output:
+      arn:aws:s3:::my-bucket-12345
+
+  - name: Fn::SubNow substitutes variables with array format
+    template:
+      Fn::SubNow:
+        - "arn:aws:s3:::bucket-${Environment}-${AccountId}"
+        - Environment: prod
+          AccountId: "987654321"
+    output:
+      arn:aws:s3:::bucket-prod-987654321
+
+  - name: Fn::SubNow respects inject variables
+    template:
+      Fn::SubNow: "s3://${BucketName}/prefix-${Version}"
+    inject:
+      BucketName: my-data-bucket
+      Version: "1.0.0"
+    output:
+      s3://my-data-bucket/prefix-1.0.0
+
+  - name: Fn::SubNow handles AWS pseudo-parameter Region
+    template:
+      Fn::SubNow: "arn:aws:logs:${AWS::Region}:123456789012:log-group:/aws/lambda/function"
+    doEnv:
+      AWS_REGION: us-west-2
+    output:
+      arn:aws:logs:us-west-2:123456789012:log-group:/aws/lambda/function
+
+  - name: Fn::SubNow handles AWS pseudo-parameter StackName
+    template:
+      Fn::SubNow: "resource-${AWS::StackName}"
+    doEnv:
+      AWS_STACK_NAME: my-stack
+    output:
+      resource-my-stack
+
+  - name: Fn::SubNow falls back to unreplaced variables when env not set
+    template:
+      Fn::SubNow: "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:MyFunc"
+    output:
+      arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:MyFunc
+
+  - name: Fn::SubNow with multiple same variables
+    template:
+      Fn::SubNow: "${Prefix}-app-${Prefix}-config-${Prefix}"
+    inject:
+      Prefix: prod
+    output:
+      prod-app-prod-config-prod
+
+  - name: Fn::SubNow with array format merges inject and explicit variables
+    template:
+      Fn::SubNow:
+        - "db-${Environment}-${Region}"
+        - Region: eu-west-1
+    inject:
+      Environment: staging
+    output:
+      db-staging-eu-west-1
+
+  - name: Fn::SubNow explicit variables do not override inject variables
+    template:
+      Fn::SubNow:
+        - "app-${Environment}"
+        - Environment: development
+    inject:
+      Environment: production
+    output:
+      app-production

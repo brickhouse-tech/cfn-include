@@ -441,6 +441,39 @@ async function recurse({ base, scope, cft, ...opts }) {
         return toJoinArray.join(delimitter);
       });
     }
+    if (cft['Fn::SubNow']) {
+      return recurse({ base, scope, cft: cft['Fn::SubNow'], ...opts }).then((input) => {
+        let template = input;
+        let variables = {};
+
+        // Handle both string and [string, variables] formats
+        if (Array.isArray(input)) {
+          [template, variables] = input;
+        }
+
+        // Merge variables with inject and AWS pseudo-parameters
+        const allVariables = {
+          // AWS Pseudo-parameters
+          'AWS::AccountId': process.env.AWS_ACCOUNT_ID || process.env.AWS_ACCOUNT_NUM || '${AWS::AccountId}',
+          'AWS::Partition': process.env.AWS_PARTITION || 'aws',
+          'AWS::Region': process.env.AWS_REGION || '${AWS::Region}',
+          'AWS::StackId': process.env.AWS_STACK_ID || '${AWS::StackId}',
+          'AWS::StackName': process.env.AWS_STACK_NAME || '${AWS::StackName}',
+          'AWS::URLSuffix': process.env.AWS_URL_SUFFIX || 'amazonaws.com',
+          ...opts.inject,
+          ...variables,
+        };
+
+        // Perform substitution for ${VarName} pattern
+        let result = template.toString();
+        _.forEach(allVariables, (value, key) => {
+          const regex = new RegExp(`\\$\\{${_.escapeRegExp(key)}\\}`, 'g');
+          result = result.replace(regex, String(value));
+        });
+
+        return result;
+      });
+    }
     if (cft['Fn::ApplyTags']) {
       return recurse({ base, scope, cft: cft['Fn::ApplyTags'], ...opts }).then((json) => {
         let { tags, Tags, resources } = json;

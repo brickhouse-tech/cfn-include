@@ -33,6 +33,7 @@ const tests = [
   'eval.js',
   'amzn-intrinsic.yml',
   'joinNow.yml',
+  'subNow.yml',
   'applyTags.yml',
 ];
 if (process.env.TEST_AWS) tests.push('s3.json');
@@ -49,6 +50,11 @@ tests.forEach(function (file) {
   for (const category in testFile) {
 
     describe(file, function () {
+      beforeEach(function () {
+        // Reset environment variables before each test
+        delete process.env.AWS_REGION;
+        delete process.env.AWS_ACCOUNT_NUM;
+      });
       testFile[category].forEach(function (test) {
         const fn = test.only ? it.only : it;
         const opts = {
