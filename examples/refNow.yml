@@ -1,0 +1,4 @@
+Fn::Map:
+  - [Bucket1, Bucket2]
+  - BucketRef:
+      Fn::RefNow: _

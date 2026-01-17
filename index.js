@@ -90,6 +90,18 @@ module.exports = async function (options) {
  *  is subtituted with Value
  * @param  {boolean} opts.doLog log all arguments at the include recurse level
  */
+function getAwsPseudoParameters() {
+  return {
+    'AWS::AccountId': process.env.AWS_ACCOUNT_ID || process.env.AWS_ACCOUNT_NUM || '${AWS::AccountId}',
+    'AWS::Partition': process.env.AWS_PARTITION || 'aws',
+    'AWS::Region': process.env.AWS_REGION || '${AWS::Region}',
+    'AWS::StackId': process.env.AWS_STACK_ID || '${AWS::StackId}',
+    'AWS::StackName': process.env.AWS_STACK_NAME || '${AWS::StackName}',
+    'AWS::URLSuffix': process.env.AWS_URL_SUFFIX || 'amazonaws.com',
+    'AWS::NotificationARNs': process.env.AWS_NOTIFICATION_ARNS || '${AWS::NotificationARNs}',
+  };
+}
+
 async function recurse({ base, scope, cft, ...opts }) {
   if (opts.doLog) {
 
@@ -439,6 +451,54 @@ async function recurse({ base, scope, cft, ...opts }) {
         let [delimitter, toJoinArray] = array;
         delimitter = replaceEnv(delimitter, opts.inject, opts.doEnv);
         return toJoinArray.join(delimitter);
+      });
+    }
+    if (cft['Fn::SubNow']) {
+      return recurse({ base, scope, cft: cft['Fn::SubNow'], ...opts }).then((input) => {
+        let template = input;
+        let variables = {};
+
+        // Handle both string and [string, variables] formats
+        if (Array.isArray(input)) {
+          [template, variables] = input;
+        }
+
+        // Merge variables with inject and AWS pseudo-parameters
+        const allVariables = {
+          ...getAwsPseudoParameters(),
+          ...opts.inject,
+          ...variables,
+        };
+
+        // Perform substitution for ${VarName} pattern
+        let result = template.toString();
+        _.forEach(allVariables, (value, key) => {
+          const regex = new RegExp(`\\$\\{${_.escapeRegExp(key)}\\}`, 'g');
+          result = result.replace(regex, String(value));
+        });
+
+        return result;
+      });
+    }
+    if (cft['Fn::RefNow']) {
+      return recurse({ base, scope, cft: cft['Fn::RefNow'], ...opts }).then((logicalName) => {
+        let refName = logicalName;
+
+        // Merge AWS pseudo-parameters with inject and scope variables
+        const allRefs = {
+          ...getAwsPseudoParameters(),
+          ...process.env,
+          ...opts.inject,
+          ...scope,
+        };
+
+        // Try to resolve the reference
+        if (refName in allRefs) {
+          return allRefs[refName];
+        }
+
+        // If not found, throw an error
+        throw new Error(`Unable to resolve Ref for logical name: ${refName}`);
       });
     }
     if (cft['Fn::ApplyTags']) {

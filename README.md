@@ -44,6 +44,8 @@ For example, [`Fn::Include`](#fninclude) provides a convenient way to include fi
   - [Fn::Eval](#fneval)
   - [Fn::IfEval](#fnifeval)
   - [Fn::JoinNow](#fnjoinnow)
+  - [Fn::SubNow](#fsubnow)
+  - [Fn::RefNow](#frefnow)
   - [Fn::ApplyTags](#fnapplytags)
   - [Fn::Outputs](#fnoutputs)
   - [More Examples](#more-examples)
@@ -1070,6 +1072,134 @@ Fn::JoinNow:
 ```yaml
 arn:aws:s3:::c1-acme-iam-cache-engine-${AWS::AccountId}-us-east-1$CFT_STACK_SUFFIX
 ```
+
+## Fn::SubNow
+
+`Fn::SubNow` performs immediate string substitution similar to AWS CloudFormation's `Fn::Sub`, but evaluates during template preprocessing rather than at stack creation time. It supports variable substitution using `${VariableName}` syntax and AWS pseudo-parameters.
+
+The function supports two input formats:
+
+**String format:**
+```yaml
+Fn::SubNow: "arn:aws:s3:::bucket-${BucketSuffix}"
+```
+
+**Array format with variables:**
+```yaml
+Fn::SubNow:
+  - "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}"
+  - LogGroupName: /aws/lambda/my-function
+```
+
+**Supported AWS pseudo-parameters:**
+- `${AWS::AccountId}` - AWS Account ID
+- `${AWS::Region}` - AWS Region
+- `${AWS::StackName}` - Stack name
+- `${AWS::StackId}` - Stack ID
+- `${AWS::Partition}` - AWS Partition (e.g., 'aws')
+- `${AWS::URLSuffix}` - URL suffix (e.g., 'amazonaws.com')
+
+Variables can be provided via:
+1. The `inject` option passed to `cfn-include`
+2. Explicit variables in the array format (takes precedence over `inject`)
+3. Environment variables when using the `doEnv` option
+
+**Example with environment variables:**
+```yaml
+BucketName: !SubNow "my-bucket-${Environment}-${AWS::Region}"
+```
+
+With `CFN_INCLUDE_DO_ENV=true` and environment variable `ENVIRONMENT=prod`, this resolves to:
+```yaml
+BucketName: "my-bucket-prod-us-east-1"
+```
+
+## Fn::RefNow
+
+`Fn::RefNow` resolves a reference immediately during template preprocessing, similar to AWS CloudFormation's `Fn::Ref` but evaluated at processing time rather than stack creation time. It resolves references to parameters, variables, and AWS pseudo-parameters.
+
+**Basic syntax:**
+```yaml
+BucketRef:
+  Fn::RefNow: BucketName
+```
+
+or using YAML tag syntax:
+```yaml
+BucketRef: !RefNow BucketName
+```
+
+**Supported AWS pseudo-parameters:**
+- `AWS::AccountId` - AWS Account ID (environment: `AWS_ACCOUNT_ID` or `AWS_ACCOUNT_NUM`, fallback: `${AWS::AccountId}`)
+- `AWS::Region` - AWS Region (environment: `AWS_REGION`, fallback: `${AWS::Region}`)
+- `AWS::StackName` - Stack name (environment: `AWS_STACK_NAME`, fallback: `${AWS::StackName}`)
+- `AWS::StackId` - Stack ID (environment: `AWS_STACK_ID`, fallback: `${AWS::StackId}`)
+- `AWS::Partition` - AWS Partition (environment: `AWS_PARTITION`, default: `'aws'`)
+- `AWS::URLSuffix` - URL suffix (environment: `AWS_URL_SUFFIX`, default: `'amazonaws.com'`)
+- `AWS::NotificationARNs` - SNS topic ARNs for notifications (environment: `AWS_NOTIFICATION_ARNS`, fallback: `${AWS::NotificationARNs}`)
+
+**Reference resolution priority:**
+1. AWS pseudo-parameters (with environment variable fallbacks)
+2. Variables from the `inject` option
+3. Variables from the current scope (useful with `Fn::Map`)
+
+**Reference indirection:**
+If a resolved reference is a string, it will be treated as a reference name and resolved again. This enables reference chaining, useful when using `Fn::RefNow` with `Fn::Map`:
+
+```yaml
+Fn::Map:
+  - [BucketVar1, BucketVar2]
+  - BucketName:
+      Fn::RefNow: _
+```
+
+With `inject: { BucketVar1: "my-bucket-1", BucketVar2: "my-bucket-2" }`, this via 
+
+`$ Bucket1=my-bucket-1 BucketVar2=my-bucket-2 cnf-include examples/refNow.yml --enable env,eval` via exports / env
+
+or 
+
+`$ cnf-include examples/refNow.yml --enable env,eval --inject '{"BucketVar1":"my-bucket-1","BucketVar2":"my-bucket-2"}'` via inject
+
+resolves to:
+```yaml
+BucketVar1: my-bucket-1
+BucketVar2: my-bucket-2
+```
+
+The `_` placeholder resolves to `"BucketVar1"` or `"BucketVar2"`, which are then resolved again to their actual values.
+
+**Example with injected variables:**
+```yaml
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::RefNow: BucketName
+```
+
+With `inject: { BucketName: "my-app-bucket" }`, this resolves to:
+```yaml
+BucketName: "my-app-bucket"
+```
+
+**Example with AWS pseudo-parameters:**
+```yaml
+LogGroup:
+  Fn::RefNow: AWS::StackName
+```
+
+With `AWS_STACK_NAME=my-stack`, this resolves to:
+```yaml
+LogGroup: "my-stack"
+```
+
+**Unresolved AWS pseudo-parameters:**
+If an AWS pseudo-parameter is not set via environment variables, it falls back to a placeholder string (e.g., `${AWS::AccountId}`). Only `AWS::Partition` and `AWS::URLSuffix` have hardcoded defaults since they are rarely environment-specific.
+
+**Error handling:**
+If a reference cannot be resolved, `Fn::RefNow` will throw an error. Ensure all referenced parameters and variables are available via inject, scope, or environment variables.
 
 ## Fn::ApplyTags
 
