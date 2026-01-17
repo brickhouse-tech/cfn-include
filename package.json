@@ -1,6 +1,6 @@
 {
   "name": "@znemz/cfn-include",
-  "version": "2.1.8",
+  "version": "2.1.9",
   "description": "Preprocessor for CloudFormation templates with support for loops and flexible include statements",
   "keywords": [
     "aws",
