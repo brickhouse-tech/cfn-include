@@ -34,6 +34,7 @@ const tests = [
   'amzn-intrinsic.yml',
   'joinNow.yml',
   'subNow.yml',
+  'refNow.js',
   'applyTags.yml',
 ];
 if (process.env.TEST_AWS) tests.push('s3.json');
@@ -54,6 +55,7 @@ tests.forEach(function (file) {
         // Reset environment variables before each test
         delete process.env.AWS_REGION;
         delete process.env.AWS_ACCOUNT_NUM;
+        delete process.env.AWS_ACCOUNT_ID;
       });
       testFile[category].forEach(function (test) {
         const fn = test.only ? it.only : it;
