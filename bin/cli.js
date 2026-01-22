@@ -88,6 +88,14 @@ const { env } = process;
        
       desc: `console log out include options in recurse step`,
     },
+    'ref-now-ignore-missing': {
+      boolean: true,
+      desc: 'do not fail if Fn::RefNow reference cannot be resolved',
+    },
+    'ref-now-ignores': {
+      string: true,
+      desc: 'comma-separated list of reference names to ignore if not found',
+    },
     version: {
       boolean: true,
       desc: 'print version and exit',
@@ -102,6 +110,9 @@ const { env } = process;
 // make enable an array
 opts.enable = opts.enable.split(',');
 
+// Parse ref-now-ignores into an array
+const refNowIgnores = opts['ref-now-ignores'] ? opts['ref-now-ignores'].split(',').map(s => s.trim()) : [];
+
 let promise;
 if (opts.path) {
   let location;
@@ -115,6 +126,8 @@ if (opts.path) {
     doEval: opts.enable.includes('eval'),
     inject: opts.inject,
     doLog: opts.doLog,
+    refNowIgnoreMissing: opts['ref-now-ignore-missing'],
+    refNowIgnores: refNowIgnores,
   });
 } else {
   promise = new Promise((resolve, reject) => {
@@ -142,6 +155,8 @@ if (opts.path) {
       doEval: opts.enable.includes('eval'),
       inject: opts.inject,
       doLog: opts.doLog,
+      refNowIgnoreMissing: opts['ref-now-ignore-missing'],
+      refNowIgnores: refNowIgnores,
     }).catch((err) => console.error(err));
   });
 }
