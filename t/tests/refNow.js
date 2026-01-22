@@ -196,5 +196,81 @@ module.exports = {
         InstanceCount: 5,
       },
     },
+    {
+      name: 'Fn::RefNow with refNowIgnoreMissing option returns Ref syntax',
+      template: {
+        Value: {
+          'Fn::RefNow': 'NonExistentRef',
+        },
+      },
+      refNowIgnoreMissing: true,
+      output: {
+        Value: {
+          Ref: 'NonExistentRef',
+        },
+      },
+    },
+    {
+      name: 'Fn::RefNow with refNowIgnores array returns Ref syntax for specified refs',
+      template: {
+        Value1: {
+          'Fn::RefNow': 'IgnoredRef1',
+        },
+        Value2: {
+          'Fn::RefNow': 'IgnoredRef2',
+        },
+      },
+      refNowIgnores: ['IgnoredRef1', 'IgnoredRef2'],
+      output: {
+        Value1: {
+          Ref: 'IgnoredRef1',
+        },
+        Value2: {
+          Ref: 'IgnoredRef2',
+        },
+      },
+    },
+    {
+      name: 'Fn::RefNow with refNowIgnores returns Ref only for matching refs',
+      template: {
+        IgnoredValue: {
+          'Fn::RefNow': 'IgnoredRef',
+        },
+        ResolvedValue: {
+          'Fn::RefNow': 'ExistingRef',
+        },
+      },
+      refNowIgnores: ['IgnoredRef'],
+      inject: {
+        ExistingRef: 'resolved-value',
+      },
+      output: {
+        IgnoredValue: {
+          Ref: 'IgnoredRef',
+        },
+        ResolvedValue: 'resolved-value',
+      },
+    },
+    {
+      name: 'Fn::RefNow with refNowIgnoreMissing and refNowIgnores combined',
+      template: {
+        Value1: {
+          'Fn::RefNow': 'IgnoredRef',
+        },
+        Value2: {
+          'Fn::RefNow': 'NonExistentRef',
+        },
+      },
+      refNowIgnores: ['IgnoredRef'],
+      refNowIgnoreMissing: true,
+      output: {
+        Value1: {
+          Ref: 'IgnoredRef',
+        },
+        Value2: {
+          Ref: 'NonExistentRef',
+        },
+      },
+    },
   ],
 };

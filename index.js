@@ -484,6 +484,11 @@ async function recurse({ base, scope, cft, ...opts }) {
       return recurse({ base, scope, cft: cft['Fn::RefNow'], ...opts }).then((logicalName) => {
         let refName = logicalName;
 
+        // Check if this ref name is in the ignores list
+        if (opts.refNowIgnores && opts.refNowIgnores.includes(refName)) {
+          return { Ref: refName };
+        }
+
         // Merge AWS pseudo-parameters with inject and scope variables
         const allRefs = {
           ...getAwsPseudoParameters(),
@@ -497,7 +502,12 @@ async function recurse({ base, scope, cft, ...opts }) {
           return allRefs[refName];
         }
 
-        // If not found, throw an error
+        // If not found and refNowIgnoreMissing is true, return Ref syntax; otherwise throw error
+        if (opts.refNowIgnoreMissing) {
+          return { Ref: refName };
+        }
+
+        // Default behavior: throw an error (backward compatible)
         throw new Error(`Unable to resolve Ref for logical name: ${refName}`);
       });
     }

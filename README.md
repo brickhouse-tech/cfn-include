@@ -1201,6 +1201,28 @@ If an AWS pseudo-parameter is not set via environment variables, it falls back t
 **Error handling:**
 If a reference cannot be resolved, `Fn::RefNow` will throw an error. Ensure all referenced parameters and variables are available via inject, scope, or environment variables.
 
+**CLI Options for Fn::RefNow:**
+
+The `cfn-include` command provides CLI options to control how unresolved references are handled:
+
+- `--ref-now-ignore-missing`: Do not fail if a `Fn::RefNow` reference cannot be resolved. Instead, the reference will be returned in AWS CloudFormation's standard `Ref` syntax (e.g., `{ Ref: 'UnresolvedRef' }`), allowing CloudFormation to resolve it at stack creation time.
+- `--ref-now-ignores <names>`: Comma-separated list of reference names to ignore if not found. These references will be returned in `Ref` syntax instead of throwing an error.
+
+**Example usage:**
+
+```bash
+# Ignore all unresolved references
+cfn-include template.yaml --ref-now-ignore-missing
+
+# Ignore specific reference names
+cfn-include template.yaml --ref-now-ignores "OptionalRef1,OptionalRef2"
+
+# Combine both options
+cfn-include template.yaml --ref-now-ignore-missing --ref-now-ignores "SpecificRef"
+```
+
+This is useful for templates that reference CloudFormation parameters or other resources that may not be available at template processing time but will be available at stack creation time.
+
 ## Fn::ApplyTags
 
 See [ApplyTags test file](t/tests/applyTags.yml).

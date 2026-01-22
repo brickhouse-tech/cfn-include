@@ -69,6 +69,12 @@ tests.forEach(function (file) {
         if (test.inject) {
           opts.inject = test.inject;
         }
+        if (test.refNowIgnoreMissing !== undefined) {
+          opts.refNowIgnoreMissing = test.refNowIgnoreMissing;
+        }
+        if (test.refNowIgnores) {
+          opts.refNowIgnores = test.refNowIgnores;
+        }
         // console.log(opts);
         fn(test.name || 'include', function (done) {
           extendEnv(test.doEnv, () => {
