@@ -25,6 +25,7 @@ const replaceEnv = require('./lib/replaceEnv');
 
 const { lowerCamelCase, upperCamelCase } = require('./lib/utils');
 const { isOurExplicitFunction } = require('./lib/schema');
+const { getAwsPseudoParameters, buildResourceArn } = require('./lib/internals');
 
 /**
  * @param  {object} options
@@ -37,6 +38,9 @@ const { isOurExplicitFunction } = require('./lib/schema');
  *      inject { KEY: Value } from where ${KEY}
  *  is substituted with Value
  * @param  {boolean} [options.doLog] log all arguments at the include recurse level
+ * @param  {Array<string>} [options.refNowIgnores] array of logical resource IDs to ignore when resolving Fn::RefNow references
+ * @param  {boolean} [options.refNowIgnoreMissing] if true, return Ref syntax for unresolvable references; if false, throw error
+ * @param  {object} [options.rootTemplate] the root template object for resource lookups in Fn::RefNow
  *
  * Example: Load off off file system
  * include({
@@ -61,7 +65,12 @@ module.exports = async function (options) {
     : template;
   // Resolve template if it's a promise to extract the root template for reference lookups
   const resolvedTemplate = await Promise.resolve(template);
-  return recurse({ base, scope, cft: resolvedTemplate, rootTemplate: resolvedTemplate, ...options });
+  return recurse({
+    base, scope,
+    cft: resolvedTemplate,
+    rootTemplate: resolvedTemplate,
+    ...options,
+  });
 };
 
 /**
@@ -91,185 +100,18 @@ module.exports = async function (options) {
  * @param  {Object} opts.inject object to inject { KEY: Value } from where ${KEY}
  *  is subtituted with Value
  * @param  {boolean} opts.doLog log all arguments at the include recurse level
+ * @param  {Array<string>} [opts.refNowIgnores] array of logical resource IDs to ignore when resolving Fn::RefNow references
+ * @param  {boolean} [opts.refNowIgnoreMissing] if true, return Ref syntax for unresolvable references; if false, throw error
+ * @param  {object} [rootTemplate] the root template object for resource lookups in Fn::RefNow
+ * @param {String} [caller] internal use only for logging, to aid in who called recurse Fn::Include, Fn::RefNow, etc..
  */
-function getAwsPseudoParameters() {
-  return {
-    'AWS::AccountId': process.env.AWS_ACCOUNT_ID || process.env.AWS_ACCOUNT_NUM || '${AWS::AccountId}',
-    'AWS::Partition': process.env.AWS_PARTITION || 'aws',
-    'AWS::Region': process.env.AWS_REGION || '${AWS::Region}',
-    'AWS::StackId': process.env.AWS_STACK_ID || '${AWS::StackId}',
-    'AWS::StackName': process.env.AWS_STACK_NAME || '${AWS::StackName}',
-    'AWS::URLSuffix': process.env.AWS_URL_SUFFIX || 'amazonaws.com',
-    'AWS::NotificationARNs': process.env.AWS_NOTIFICATION_ARNS || '${AWS::NotificationARNs}',
-  };
-}
-
-/**
- * Build an ARN for a CloudFormation resource based on its Type and Properties
- * Supports both ARN construction and property name resolution
- * @param {string} resourceType - The CloudFormation resource type (e.g., 'AWS::IAM::ManagedPolicy')
- * @param {object} properties - The resource properties
- * @param {object} pseudoParams - AWS pseudo-parameters including AccountId, Region
- * @param {object} options - Optional configuration
- * @param {string} options.returnType - 'arn' (default) or 'name' to return the resource name/identifier
- * @returns {string|null} - The ARN, name, or null if not applicable
- */
-function buildResourceArn(resourceType, properties = {}, pseudoParams = {}, options = {}) {
-  const accountId = pseudoParams['AWS::AccountId'] || '${AWS::AccountId}';
-  const region = pseudoParams['AWS::Region'] || '${AWS::Region}';
-  const partition = pseudoParams['AWS::Partition'] || 'aws';
-  const returnType = options.returnType || 'arn';
-
-  // Handle AWS::IAM::ManagedPolicy
-  if (resourceType === 'AWS::IAM::ManagedPolicy') {
-    const { ManagedPolicyName, Path } = properties;
-    if (ManagedPolicyName) {
-      if (returnType === 'name') {
-        return ManagedPolicyName;
-      }
-      const path = Path || '/';
-      return `arn:${partition}:iam::${accountId}:policy${path}${ManagedPolicyName}`;
-    }
-  }
-
-  // Handle AWS::IAM::Role
-  if (resourceType === 'AWS::IAM::Role') {
-    const { RoleName, Path } = properties;
-    if (RoleName) {
-      if (returnType === 'name') {
-        return RoleName;
-      }
-      const path = Path || '/';
-      return `arn:${partition}:iam::${accountId}:role${path}${RoleName}`;
-    }
-  }
-
-  // Handle AWS::S3::Bucket
-  if (resourceType === 'AWS::S3::Bucket') {
-    const { BucketName } = properties;
-    if (BucketName) {
-      if (returnType === 'name') {
-        return BucketName;
-      }
-      return `arn:${partition}:s3:::${BucketName}`;
-    }
-  }
-
-  // Handle AWS::Lambda::Function
-  if (resourceType === 'AWS::Lambda::Function') {
-    const { FunctionName } = properties;
-    if (FunctionName) {
-      if (returnType === 'name') {
-        return FunctionName;
-      }
-      return `arn:${partition}:lambda:${region}:${accountId}:function:${FunctionName}`;
-    }
-  }
-
-  // Handle AWS::SQS::Queue
-  if (resourceType === 'AWS::SQS::Queue') {
-    const { QueueName } = properties;
-    if (QueueName) {
-      if (returnType === 'name') {
-        return QueueName;
-      }
-      return `arn:${partition}:sqs:${region}:${accountId}:${QueueName}`;
-    }
-  }
-
-  // Handle AWS::SNS::Topic
-  if (resourceType === 'AWS::SNS::Topic') {
-    const { TopicName } = properties;
-    if (TopicName) {
-      if (returnType === 'name') {
-        return TopicName;
-      }
-      return `arn:${partition}:sns:${region}:${accountId}:${TopicName}`;
-    }
-  }
-
-  // Handle AWS::DynamoDB::Table
-  if (resourceType === 'AWS::DynamoDB::Table') {
-    const { TableName } = properties;
-    if (TableName) {
-      if (returnType === 'name') {
-        return TableName;
-      }
-      return `arn:${partition}:dynamodb:${region}:${accountId}:table/${TableName}`;
-    }
-  }
-
-  // Handle AWS::RDS::DBInstance
-  if (resourceType === 'AWS::RDS::DBInstance') {
-    const { DBInstanceIdentifier } = properties;
-    if (DBInstanceIdentifier) {
-      if (returnType === 'name') {
-        return DBInstanceIdentifier;
-      }
-      return `arn:${partition}:rds:${region}:${accountId}:db:${DBInstanceIdentifier}`;
-    }
-  }
-
-  // Handle AWS::EC2::SecurityGroup
-  if (resourceType === 'AWS::EC2::SecurityGroup') {
-    const { GroupName } = properties;
-    if (GroupName) {
-      if (returnType === 'name') {
-        return GroupName;
-      }
-      // Security groups need to be referenced by ID in most cases, not ARN
-      // This returns the name for reference purposes
-      return GroupName;
-    }
-  }
-
-  // Handle AWS::IAM::InstanceProfile
-  if (resourceType === 'AWS::IAM::InstanceProfile') {
-    const { InstanceProfileName, Path } = properties;
-    if (InstanceProfileName) {
-      if (returnType === 'name') {
-        return InstanceProfileName;
-      }
-      const path = Path || '/';
-      return `arn:${partition}:iam::${accountId}:instance-profile${path}${InstanceProfileName}`;
-    }
-  }
-
-  // Handle AWS::KMS::Key
-  if (resourceType === 'AWS::KMS::Key') {
-    // KMS keys are referenced by KeyId or KeyArn in properties
-    const { KeyId } = properties;
-    if (KeyId) {
-      if (returnType === 'name') {
-        return KeyId;
-      }
-      return `arn:${partition}:kms:${region}:${accountId}:key/${KeyId}`;
-    }
-  }
-
-  // Handle AWS::SecretsManager::Secret
-  if (resourceType === 'AWS::SecretsManager::Secret') {
-    const { Name } = properties;
-    if (Name) {
-      if (returnType === 'name') {
-        return Name;
-      }
-      return `arn:${partition}:secretsmanager:${region}:${accountId}:secret:${Name}`;
-    }
-  }
-
-  // Add more resource types as needed
-  return null;
-}
-
-async function recurse({ base, scope, cft, ...opts }) {
+async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
   if (opts.doLog) {
-
-    console.log({ base, scope, cft, ...opts });
+    console.log({ base, scope, cft, rootTemplate, caller, ...opts });
   }
   scope = _.clone(scope);
   if (_.isArray(cft)) {
-    return Promise.all(cft.map((o) => recurse({ base, scope, cft: o, ...opts })));
+    return Promise.all(cft.map((o) => recurse({ base, scope, cft: o, rootTemplate, caller: 'recurse:isArray', ...opts })));
   }
   if (_.isPlainObject(cft)) {
     if (cft['Fn::Map']) {
@@ -294,26 +136,26 @@ async function recurse({ base, scope, cft, ...opts }) {
       if (args.length === 2) {
         placeholder = '_';
       }
-      return PromiseExt.mapX(recurse({ base, scope, cft: list, ...opts }), (replace, key) => {
+      return PromiseExt.mapX(recurse({ base, scope, cft: list, rootTemplate, caller: 'Fn::Map', ...opts }), (replace, key) => {
         scope = _.clone(scope);
         scope[placeholder] = replace;
         if (hasindex) {
           scope[idx] = key;
         }
         const replaced = findAndReplace(scope, _.cloneDeep(body));
-        return recurse({ base, scope, cft: replaced, ...opts });
+        return recurse({ base, scope, cft: replaced, rootTemplate, caller: 'Fn::Map', ...opts });
       }).then((_cft) => {
         if (hassize) {
           _cft = findAndReplace({ [sz]: _cft.length }, _cft);
         }
-        return recurse({ base, scope, cft: _cft, ...opts });
+        return recurse({ base, scope, cft: _cft, rootTemplate, caller: 'Fn::Map', ...opts });
       });
     }
     if (cft['Fn::Length']) {
       if (Array.isArray(cft['Fn::Length'])) {
         return cft['Fn::Length'].length;
       }
-      return recurse({ base, scope, cft: cft['Fn::Length'], ...opts }).then((x) => {
+      return recurse({ base, scope, cft: cft['Fn::Length'], rootTemplate, caller: 'Fn::Length', ...opts }).then((x) => {
         if (Array.isArray(x)) {
           return x.length;
         }
@@ -329,49 +171,49 @@ async function recurse({ base, scope, cft, ...opts }) {
           return cft;
         })
         .then((_cft) => findAndReplace(scope, _cft))
-        .then((t) => recurse({ base, scope, cft: t, ...opts }));
+        .then((t) => recurse({ base, scope, cft: t, rootTemplate, caller: 'Fn::Include', ...opts }));
     }
     if (cft['Fn::Flatten']) {
-      return recurse({ base, scope, cft: cft['Fn::Flatten'], ...opts }).then(function (json) {
+      return recurse({ base, scope, cft: cft['Fn::Flatten'], rootTemplate, caller: 'Fn::Flatten', ...opts }).then(function (json) {
         return _.flatten(json);
       });
     }
     if (cft['Fn::FlattenDeep']) {
-      return recurse({ base, scope, cft: cft['Fn::FlattenDeep'], ...opts }).then(
+      return recurse({ base, scope, cft: cft['Fn::FlattenDeep'], rootTemplate, caller: 'Fn::FlattenDeep', ...opts }).then(
         function (json) {
           return _.flattenDeep(json);
         },
       );
     }
     if (cft['Fn::Uniq']) {
-      return recurse({ base, scope, cft: cft['Fn::Uniq'], ...opts }).then(function (json) {
+      return recurse({ base, scope, cft: cft['Fn::Uniq'], rootTemplate, caller: 'Fn::Uniq', ...opts }).then(function (json) {
         return _.uniq(json);
       });
     }
     if (cft['Fn::Compact']) {
-      return recurse({ base, scope, cft: cft['Fn::Compact'], ...opts }).then(function (json) {
+      return recurse({ base, scope, cft: cft['Fn::Compact'], rootTemplate, caller: 'Fn::Compact', ...opts }).then(function (json) {
         return _.compact(json);
       });
     }
     if (cft['Fn::Concat']) {
-      return recurse({ base, scope, cft: cft['Fn::Concat'], ...opts }).then(function (json) {
+      return recurse({ base, scope, cft: cft['Fn::Concat'], rootTemplate, caller: 'Fn::Concat', ...opts }).then(function (json) {
         return _.concat(...json);
       });
     }
     if (cft['Fn::Sort']) {
-      return recurse({ base, scope, cft: cft['Fn::Sort'], ...opts }).then(function (array) {
+      return recurse({ base, scope, cft: cft['Fn::Sort'], rootTemplate, caller: 'Fn::Sort', ...opts }).then(function (array) {
         return array.sort();
       });
     }
     if (cft['Fn::SortedUniq']) {
-      return recurse({ base, scope, cft: cft['Fn::SortedUniq'], ...opts }).then(
+      return recurse({ base, scope, cft: cft['Fn::SortedUniq'], rootTemplate, caller: 'Fn::SortedUniq', ...opts }).then(
         function (array) {
           return _.sortedUniq(array.sort());
         },
       );
     }
     if (cft['Fn::SortBy']) {
-      return recurse({ base, scope, cft: cft['Fn::SortBy'], ...opts }).then(function ({
+      return recurse({ base, scope, cft: cft['Fn::SortBy'], rootTemplate, caller: 'Fn::SortBy', ...opts }).then(function ({
         list,
         iteratees,
       }) {
@@ -379,7 +221,7 @@ async function recurse({ base, scope, cft, ...opts }) {
       });
     }
     if (cft['Fn::SortObject']) {
-      return recurse({ base, scope, cft: cft['Fn::SortObject'], ...opts }).then(function ({
+      return recurse({ base, scope, cft: cft['Fn::SortObject'], rootTemplate, caller: 'Fn::SortObject', ...opts }).then(function ({
 
         object,
         options,
@@ -389,19 +231,19 @@ async function recurse({ base, scope, cft, ...opts }) {
       });
     }
     if (cft['Fn::Without']) {
-      return recurse({ base, scope, cft: cft['Fn::Without'], ...opts }).then(function (json) {
+      return recurse({ base, scope, cft: cft['Fn::Without'], rootTemplate, caller: 'Fn::Without', ...opts }).then(function (json) {
         json = Array.isArray(json) ? { list: json[0], withouts: json[1] } : json;
         return _.without(json.list, ...json.withouts);
       });
     }
     if (cft['Fn::Omit']) {
-      return recurse({ base, scope, cft: cft['Fn::Omit'], ...opts }).then(function (json) {
+      return recurse({ base, scope, cft: cft['Fn::Omit'], rootTemplate, caller: 'Fn::Omit', ...opts }).then(function (json) {
         json = Array.isArray(json) ? { object: json[0], omits: json[1] } : json;
         return _.omit(json.object, json.omits);
       });
     }
     if (cft['Fn::OmitEmpty']) {
-      return recurse({ base, scope, cft: cft['Fn::OmitEmpty'], ...opts }).then(
+      return recurse({ base, scope, cft: cft['Fn::OmitEmpty'], rootTemplate, caller: 'Fn::OmitEmpty', ...opts }).then(
         function (json) {
           // omit falsy values except false, and 0
           return _.omitBy(json, (v) => !v && v !== false && v !== 0);
@@ -412,7 +254,7 @@ async function recurse({ base, scope, cft, ...opts }) {
       if (!opts.doEval) {
         return Promise.reject(new Error('Fn::Eval is not allowed doEval is falsy'));
       }
-      return recurse({ base, scope, cft: cft['Fn::Eval'], ...opts }).then(function (json) {
+      return recurse({ base, scope, cft: cft['Fn::Eval'], rootTemplate, caller: 'Fn::Eval', ...opts }).then(function (json) {
         // **WARNING** you have now enabled god mode
 
         let { state, script, inject, doLog } = json;
@@ -426,7 +268,7 @@ async function recurse({ base, scope, cft, ...opts }) {
       });
     }
     if (cft['Fn::Filenames']) {
-      return recurse({ base, scope, cft: cft['Fn::Filenames'], ...opts }).then(
+      return recurse({ base, scope, cft: cft['Fn::Filenames'], rootTemplate, caller: 'Fn::Filenames', ...opts }).then(
         function (json) {
           json = _.isPlainObject(json) ? { ...json } : { location: json };
           if (json.doLog) {
@@ -453,14 +295,14 @@ async function recurse({ base, scope, cft, ...opts }) {
       );
     }
     if (cft['Fn::Merge']) {
-      return recurse({ base, scope, cft: cft['Fn::Merge'], ...opts }).then(function (json) {
+      return recurse({ base, scope, cft: cft['Fn::Merge'], rootTemplate, caller: 'Fn::Merge', ...opts }).then(function (json) {
         delete cft['Fn::Merge'];
 
-        return recurse({ base, scope, cft: _.defaults(cft, _.merge.apply(_, json)), ...opts });
+        return recurse({ base, scope, cft: _.defaults(cft, _.merge.apply(_, json)), rootTemplate, caller: 'Fn::Merge', ...opts });
       });
     }
     if (cft['Fn::DeepMerge']) {
-      return recurse({ base, scope, cft: cft['Fn::DeepMerge'], ...opts }).then(
+      return recurse({ base, scope, cft: cft['Fn::DeepMerge'], rootTemplate, caller: 'Fn::DeepMerge', ...opts }).then(
         function (json) {
           delete cft['Fn::DeepMerge'];
           let mergedObj = {};
@@ -469,29 +311,29 @@ async function recurse({ base, scope, cft, ...opts }) {
               mergedObj = deepMerge(mergedObj, j);
             });
           }
-          return recurse({ base, scope, cft: _.defaults(cft, mergedObj), ...opts });
+          return recurse({ base, scope, cft: _.defaults(cft, mergedObj), rootTemplate, caller: 'Fn::DeepMerge', ...opts });
         },
       );
     }
     if (cft['Fn::ObjectKeys']) {
-      return recurse({ base, scope, cft: cft['Fn::ObjectKeys'], ...opts }).then((json) =>
+      return recurse({ base, scope, cft: cft['Fn::ObjectKeys'], rootTemplate, caller: 'Fn::ObjectKeys', ...opts }).then((json) =>
         Object.keys(json),
       );
     }
     if (cft['Fn::ObjectValues']) {
-      return recurse({ base, scope, cft: cft['Fn::ObjectValues'], ...opts }).then((json) =>
+      return recurse({ base, scope, cft: cft['Fn::ObjectValues'], rootTemplate, caller: 'Fn::ObjectValues', ...opts }).then((json) =>
         Object.values(json),
       );
     }
     if (cft['Fn::Stringify']) {
-      return recurse({ base, scope, cft: cft['Fn::Stringify'], ...opts }).then(
+      return recurse({ base, scope, cft: cft['Fn::Stringify'], rootTemplate, caller: 'Fn::Stringify', ...opts }).then(
         function (json) {
           return JSON.stringify(json);
         },
       );
     }
     if (cft['Fn::StringSplit']) {
-      return recurse({ base, scope, cft: cft['Fn::StringSplit'], ...opts }).then(
+      return recurse({ base, scope, cft: cft['Fn::StringSplit'], rootTemplate, caller: 'Fn::StringSplit', ...opts }).then(
         ({ string, separator, doLog }) => {
           if (!string) {
             string = '';
@@ -526,7 +368,7 @@ async function recurse({ base, scope, cft, ...opts }) {
     }
 
     if (cft['Fn::Outputs']) {
-      const outputs = await recurse({ base, scope, cft: cft['Fn::Outputs'], ...opts });
+      const outputs = await recurse({ base, scope, cft: cft['Fn::Outputs'], caller: 'Fn::Outputs', ...opts });
       const result = {};
 
       for (const output in outputs) {
@@ -551,7 +393,7 @@ async function recurse({ base, scope, cft, ...opts }) {
     }
 
     if (cft['Fn::Sequence']) {
-      const outputs = await recurse({ base, scope, cft: cft['Fn::Sequence'], ...opts });
+      const outputs = await recurse({ base, scope, cft: cft['Fn::Sequence'], caller: 'Fn::Sequence', ...opts });
 
       let [start, stop, step = 1] = outputs;
       const isString = typeof start === 'string';
@@ -570,7 +412,7 @@ async function recurse({ base, scope, cft, ...opts }) {
       if (!opts.doEval) {
         return Promise.reject(new Error('Fn::IfEval is not allowed doEval is falsy'));
       }
-      return recurse({ base, scope, cft: cft['Fn::IfEval'], ...opts }).then(function (json) {
+      return recurse({ base, scope, cft: cft['Fn::IfEval'], rootTemplate, caller: 'Fn::IfEval', ...opts }).then(function (json) {
 
         let { truthy, falsy, evalCond, inject, doLog } = json;
         if (!evalCond) {
@@ -599,13 +441,13 @@ async function recurse({ base, scope, cft, ...opts }) {
         }
 
         if (condResult) {
-          return recurse({ base, scope, cft: truthy, ...opts });
+          return recurse({ base, scope, cft: truthy, rootTemplate, caller: 'Fn::IfEval', ...opts });
         }
-        return recurse({ base, scope, cft: falsy, ...opts });
+        return recurse({ base, scope, cft: falsy, rootTemplate, caller: 'Fn::IfEval', ...opts });
       });
     }
     if (cft['Fn::JoinNow']) {
-      return recurse({ base, scope, cft: cft['Fn::JoinNow'], ...opts }).then((array) => {
+      return recurse({ base, scope, cft: cft['Fn::JoinNow'], rootTemplate, caller: 'Fn::JoinNow', ...opts }).then((array) => {
         // keeps with same format as Fn::Join ~ more complex
         // vs let [delimitter, ...toJoinArray] = array;
         let [delimitter, toJoinArray] = array;
@@ -614,7 +456,7 @@ async function recurse({ base, scope, cft, ...opts }) {
       });
     }
     if (cft['Fn::SubNow']) {
-      return recurse({ base, scope, cft: cft['Fn::SubNow'], ...opts }).then((input) => {
+      return recurse({ base, scope, cft: cft['Fn::SubNow'], rootTemplate, caller: 'Fn::SubNow', ...opts }).then((input) => {
         let template = input;
         let variables = {};
 
@@ -641,9 +483,13 @@ async function recurse({ base, scope, cft, ...opts }) {
       });
     }
     if (cft['Fn::RefNow']) {
+      // console.log("outter");
+      // console.log(opts);
       // Handle both simple string and object format for Fn::RefNow
       // e.g., Fn::RefNow: "MyRole" or Fn::RefNow: { Ref: "MyRole" }
-      return recurse({ base, scope, cft: cft['Fn::RefNow'], ...opts }).then((refInput) => {
+      return recurse({ base, scope, cft: cft['Fn::RefNow'], rootTemplate, caller: 'Fn::RefNow', ...opts }).then((refInput) => {
+        // console.log("inner");
+        // console.log(opts);
         let refName = refInput;
         let refOptions = {};
 
@@ -672,13 +518,13 @@ async function recurse({ base, scope, cft, ...opts }) {
         }
 
         // Check if this is a LogicalResourceId in the Resources section
-        if (opts.rootTemplate && _.isPlainObject(opts.rootTemplate)) {
-          const resources = opts.rootTemplate.Resources || {};
+        if (rootTemplate && rootTemplate.Resources) {
+          const resources = rootTemplate.Resources;
           if (refName in resources) {
             const resource = resources[refName];
             const resourceType = resource.Type;
             const properties = resource.Properties || {};
-            
+
             // Determine return type based on key name
             // If the key ends with "Name" (e.g., RoleName, BucketName), return name/identifier
             // Otherwise return ARN (default)
@@ -686,10 +532,10 @@ async function recurse({ base, scope, cft, ...opts }) {
             if (opts.key && opts.key.endsWith('Name')) {
               returnType = 'name';
             }
-            
+
             // Try to build an ARN or name for this resource
             // Merge ref options with global options (ref options take precedence)
-            const resourceOptions = { 
+            const resourceOptions = {
               returnType,
               ...opts.refNowReturnType ? { returnType: opts.refNowReturnType } : {},
               ...refOptions,
@@ -711,7 +557,7 @@ async function recurse({ base, scope, cft, ...opts }) {
       });
     }
     if (cft['Fn::ApplyTags']) {
-      return recurse({ base, scope, cft: cft['Fn::ApplyTags'], ...opts }).then((json) => {
+      return recurse({ base, scope, cft: cft['Fn::ApplyTags'], rootTemplate, caller: 'Fn::ApplyTags', ...opts }).then((json) => {
         let { tags, Tags, resources } = json;
         tags = tags || Tags; // allow for both caseing
         const promises = [];
@@ -737,7 +583,7 @@ async function recurse({ base, scope, cft, ...opts }) {
     }
 
     return Promise.props(
-      _.mapValues(cft, (template, key) => recurse({ base, scope, cft: template, key, ...opts })),
+      _.mapValues(cft, (template, key) => recurse({ base, scope, cft: template, key, rootTemplate, caller: 'recurse:isPlainObject:end', ...opts })),
     );
   }
 
@@ -831,6 +677,21 @@ function fnIncludeOpts(cft, opts) {
   return cft;
 }
 
+/**
+ * Process includes for template documents
+ * @param  {object} base file options (protocol, host, path, relative, raw)
+ * @param  {object} scope variable scope for Fn::Map substitutions
+ * @param  {Document|String|Array} cft include specification (location, query, parser, type, etc.)
+ * @param  {Object} opts processing options
+ * @param  {boolean} [opts.doEnv] inject environment from process.env
+ * @param  {boolean} [opts.doEval] allow Fn::Eval to be used
+ * @param  {Object} [opts.inject] object to inject { KEY: Value }
+ * @param  {boolean} [opts.doLog] log all arguments at the include recurse level
+ * @param  {Array<string>} [opts.refNowIgnores] array of logical resource IDs to ignore when resolving Fn::RefNow references
+ * @param  {boolean} [opts.refNowIgnoreMissing] if true, return Ref syntax for unresolvable references; if false, throw error
+ * @param  {object} [opts.rootTemplate] the root template object for resource lookups in Fn::RefNow
+ * @returns {Promise} resolved include content
+ */
 async function fnInclude({ base, scope, cft, ...opts }) {
   let procTemplate = async (template, inject = cft.inject, doEnv = opts.doEnv) =>
     replaceEnv(template, inject, doEnv);
@@ -852,7 +713,6 @@ async function fnInclude({ base, scope, cft, ...opts }) {
   cft = fnIncludeOpts(cft, opts);
 
   if (cft.doLog) {
-
     console.log({ base, scope, args: cft, ...opts });
   }
   // console.log(args)
@@ -872,14 +732,14 @@ async function fnInclude({ base, scope, cft, ...opts }) {
     if (isGlob(cft, absolute)) {
       const paths = globSync(absolute).sort();
       const template = yaml.load(paths.map((_p) => `- Fn::Include: file://${_p}`).join('\n'));
-      return recurse({ base, scope, cft: template, ...opts });
+      return recurse({ base, scope, cft: template, rootTemplate: template, ...opts });
     }
     body = readFile(absolute).then(String).then(procTemplate);
     absolute = `${location.protocol}://${absolute}`;
   } else if (location.protocol === 's3') {
     const basedir = pathParse(base.path).dir;
     const bucket = location.relative ? base.host : location.host;
-     
+
     let key = location.relative ? url.resolve(`${basedir}/`, location.raw) : location.path;
     key = key.replace(/^\//, '');
     absolute = `${location.protocol}://${[bucket, key].join('/')}`;
@@ -894,11 +754,11 @@ async function fnInclude({ base, scope, cft, ...opts }) {
       .then(procTemplate);
   } else if (location.protocol && location.protocol.match(/^https?$/)) {
     const basepath = `${pathParse(base.path).dir}/`;
-     
+
     absolute = location.relative
       ? url.resolve(`${location.protocol}://${base.host}${basepath}`, location.raw)
       : location.raw;
-     
+
     body = request(absolute).then(procTemplate);
   }
   return handleIncludeBody({ scope, args: cft, body, absolute });
@@ -908,6 +768,27 @@ function isGlob(args, str) {
   return args.isGlob || /.*\*/.test(str);
 }
 
+/**
+ * Process the resolved include body content
+ * @param  {object} config configuration object
+ * @param  {object} config.scope variable scope for substitutions
+ * @param  {Object} config.args include arguments (type, query, parser, inject, doEnv, doEval, doLog, refNowIgnores, refNowIgnoreMissing, rootTemplate)
+ * @param  {Promise} config.body promise resolving to the file content
+ * @param  {string} config.absolute absolute path/URL to the included resource
+ * @param  {string} [config.args.type='json'] type of content to process (json, string, literal)
+ * @param  {Object|string|Array} [config.args.query] query to apply to the processed template
+ * @param  {string} [config.args.parser='lodash'] parser to use for querying (lodash, jsonpath)
+ * @param  {Object} [config.args.context] context object for literal interpolation
+ * @param  {Object} [config.args.inject] object to inject { KEY: Value }
+ * @param  {boolean} [config.args.doEnv] inject environment from process.env
+ * @param  {boolean} [config.args.doEval] allow Fn::Eval to be used
+ * @param  {boolean} [config.args.doLog] log all arguments at the include recurse level
+ * @param  {Array<string>} [config.args.refNowIgnores] array of logical resource IDs to ignore when resolving Fn::RefNow references
+ * @param  {boolean} [config.args.refNowIgnoreMissing] if true, return Ref syntax for unresolvable references; if false, throw error
+ * 
+ * rootTeamplate is not an argument here cause it's loaded via arg.type
+ * @returns {Promise} processed template content
+ */
 async function handleIncludeBody({ scope, args, body, absolute }) {
   const procTemplate = (temp) => replaceEnv(temp, args.inject, args.doEnv);
   try {
@@ -915,18 +796,22 @@ async function handleIncludeBody({ scope, args, body, absolute }) {
       case 'json': {
         let b = await body;
         b = procTemplate(b);
-        const template = yaml.load(b);
-
+        const rootTemplate = yaml.load(b);
+        const caller = 'handleIncludeBody:json';
         // recurse all the way down and work your way out
         const loopTemplate = (temp) => {
           return recurse({
             base: parseLocation(absolute),
             scope,
             cft: temp,
+            caller,
+            rootTemplate,
             doEnv: args.doEnv,
             doEval: args.doEval,
             doLog: args.doLog,
             inject: args.inject,
+            refNowIgnores: args.refNowIgnores,
+            refNowIgnoreMissing: args.refNowIgnoreMissing, // note we can't use ...args here because of circular ref
           }).then((_temp) => {
             if (!_temp || !Object.keys(_temp).length) {
               return _temp;
@@ -939,7 +824,7 @@ async function handleIncludeBody({ scope, args, body, absolute }) {
           });
         };
 
-        return loopTemplate(template).then(async (temp) => {
+        return loopTemplate(rootTemplate).then(async (temp) => {
           if (!args.query) {
             return temp;
           }
@@ -950,9 +835,13 @@ async function handleIncludeBody({ scope, args, body, absolute }) {
               base: parseLocation(absolute),
               scope,
               cft: args.query,
+              caller,
+              rootTemplate,
               doEnv: args.doEnv,
               doLog: args.doLog,
               inject: args.inject,
+              refNowIgnores: args.refNowIgnores,
+              refNowIgnoreMissing: args.refNowIgnoreMissing,
             });
           return getParser(args.parser)(temp, query);
         });

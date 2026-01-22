@@ -93,7 +93,9 @@ Options:
 * `--enable`         different options / toggles: ['env','eval']    [string] [choices: 'env','eval','env.eval' etc...]
   * `env` pre-process env vars and inject into templates as they are processed looks for $KEY or ${KEY} matches
 * `-i, --inject`     JSON string payload to use for template injection. (Takes precedence over process.env (if enabled) injection and will be merged on top of process.env)
-* `--doLog`          console log out include options in recurse step.
+* `--doLog`          console log out include options in recurse step. Shows caller parameter to aid debugging nested function calls.
+* `--ref-now-ignore-missing`    do not fail if `Fn::RefNow` reference cannot be resolved; instead return in standard CloudFormation `Ref` syntax
+* `--ref-now-ignores <names>`   comma-separated list of reference names to ignore if not found (e.g., `OptionalRef1,OptionalRef2`)
 `cfn-include` also accepts a template passed from stdin
 
 ```
@@ -1369,6 +1371,122 @@ Options:
 Options are query parameters.
 
 - `validate=false` do not validate template [true]
+
+## Developer Documentation
+
+### Debug Logging with doLog
+
+The `cfn-include` preprocessor supports comprehensive debug logging for tracing template processing. When enabled, the `doLog` option logs all arguments at each recursion level in the template processing pipeline.
+
+#### Enabling doLog
+
+**CLI:**
+```bash
+cfn-include template.yaml --doLog
+```
+
+**Programmatic:**
+```javascript
+include({
+  template: myTemplate,
+  url: 'file:///path/to/template.yaml',
+  doLog: true
+})
+```
+
+#### Understanding Caller Parameter
+
+The `recurse` function now includes a `caller` parameter to help identify which function triggered each recursion step. This is invaluable for debugging complex templates with nested function calls. The caller parameter provides a trace path like:
+
+- `recurse:isArray` - Processing an array
+- `Fn::Map` - Inside an `Fn::Map` function
+- `Fn::Include` - Inside an `Fn::Include` function
+- `recurse:isPlainObject:end` - Final plain object processing
+- `handleIncludeBody:json` - JSON body being processed
+
+When `doLog` is enabled, the console output will show the caller for each recursion:
+```javascript
+{
+  base: {...},
+  scope: {...},
+  cft: {...},
+  rootTemplate: {...},
+  caller: "Fn::Map",
+  doEnv: false,
+  doEval: false,
+  ...
+}
+```
+
+This makes it easy to trace execution flow through nested `Fn::Include`, `Fn::Map`, `Fn::RefNow`, and other functions.
+
+#### Example Debug Output
+
+```bash
+$ cfn-include examples/base.template --doLog | head -50
+{
+  base: {
+    protocol: 'file',
+    host: '/Users/SOME_USER/code',
+    path: '/examples/base.template'
+  },
+  scope: {},
+  cft: { AWSTemplateFormatVersion: '2010-09-09', ... },
+  rootTemplate: { AWSTemplateFormatVersion: '2010-09-09', ... },
+  caller: 'recurse:isPlainObject:end',
+  doEnv: false,
+  doEval: false,
+  inject: undefined,
+  doLog: true
+}
+```
+
+### Fn::RefNow Improvements
+
+#### CLI Options for Reference Resolution
+
+Two new CLI options control how unresolved `Fn::RefNow` references are handled:
+
+- `--ref-now-ignore-missing`: Do not fail if a reference cannot be resolved. Instead, return the reference in CloudFormation's standard `Ref` syntax, allowing CloudFormation to resolve it at stack creation time.
+
+- `--ref-now-ignores <names>`: Comma-separated list of specific reference names to ignore if not found. Useful for optional references.
+
+**Example usage:**
+```bash
+# Ignore all unresolved references
+cfn-include template.yaml --ref-now-ignore-missing
+
+# Ignore specific references
+cfn-include template.yaml --ref-now-ignores "OptionalParam,CustomRef"
+
+# Combine both
+cfn-include template.yaml --ref-now-ignore-missing --ref-now-ignores "SpecificRef"
+```
+
+#### rootTemplate Parameter
+
+The `recurse` function now receives the complete `rootTemplate` for all recursion calls. This enables `Fn::RefNow` to resolve references to CloudFormation resources defined anywhere in the template, even when processing deeply nested includes or function results.
+
+### Fn::SubNow and Fn::JoinNow
+
+New intrinsic functions for immediate string substitution and joining:
+
+- `Fn::SubNow` - Performs immediate string substitution similar to `Fn::Sub`, but evaluates at template processing time
+- `Fn::JoinNow` - Joins array elements into a string at template processing time
+
+See the main documentation sections above for detailed usage.
+
+### Template Processing Pipeline
+
+The template processing follows this call chain for better debugging:
+
+1. Entry point calls `recurse()` with `caller: undefined`
+2. Array elements call `recurse()` with `caller: 'recurse:isArray'`
+3. Each `Fn::*` function calls `recurse()` with `caller: 'Fn::FunctionName'`
+4. Final plain object recursion uses `caller: 'recurse:isPlainObject:end'`
+5. Include body processing uses `caller: 'handleIncludeBody:json'`
+
+When combined with `--doLog`, this provides complete visibility into how `cfn-include` processes your templates.
 
 To compile the synopsis run the following command.
 
