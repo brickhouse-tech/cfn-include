@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Example using Fn::RefNow to resolve LogicalResourceIds to ARNs'
+
+Resources:
+  # Define an IAM Managed Policy
+  ObjPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: teststack-CreateTestDBPolicy-16M23YE3CS700
+      Path: /CRAP/
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 'logs:CreateLogGroup'
+            Resource: '*'
+
+  # Reference the policy by its LogicalResourceId to get its ARN
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        # Using Fn::RefNow to resolve the policy ARN at preprocessing time
+        - Fn::RefNow: ObjPolicy
+
+Outputs:
+  PolicyArn:
+    Description: The ARN of the managed policy resolved via RefNow
+    Value:
+      Fn::RefNow: ObjPolicy
+
+  RoleArn:
+    Description: The ARN of the IAM role
+    Value:
+      Fn::GetAtt:
+        - IAMRole
+        - Arn

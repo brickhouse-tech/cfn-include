@@ -59,7 +59,9 @@ module.exports = async function (options) {
   template = _.isUndefined(template)
     ? fnInclude({ base, scope, cft: options.url, ...options })
     : template;
-  return recurse({ base, scope, cft: template, ...options });
+  // Resolve template if it's a promise to extract the root template for reference lookups
+  const resolvedTemplate = await Promise.resolve(template);
+  return recurse({ base, scope, cft: resolvedTemplate, rootTemplate: resolvedTemplate, ...options });
 };
 
 /**
@@ -100,6 +102,164 @@ function getAwsPseudoParameters() {
     'AWS::URLSuffix': process.env.AWS_URL_SUFFIX || 'amazonaws.com',
     'AWS::NotificationARNs': process.env.AWS_NOTIFICATION_ARNS || '${AWS::NotificationARNs}',
   };
+}
+
+/**
+ * Build an ARN for a CloudFormation resource based on its Type and Properties
+ * Supports both ARN construction and property name resolution
+ * @param {string} resourceType - The CloudFormation resource type (e.g., 'AWS::IAM::ManagedPolicy')
+ * @param {object} properties - The resource properties
+ * @param {object} pseudoParams - AWS pseudo-parameters including AccountId, Region
+ * @param {object} options - Optional configuration
+ * @param {string} options.returnType - 'arn' (default) or 'name' to return the resource name/identifier
+ * @returns {string|null} - The ARN, name, or null if not applicable
+ */
+function buildResourceArn(resourceType, properties = {}, pseudoParams = {}, options = {}) {
+  const accountId = pseudoParams['AWS::AccountId'] || '${AWS::AccountId}';
+  const region = pseudoParams['AWS::Region'] || '${AWS::Region}';
+  const partition = pseudoParams['AWS::Partition'] || 'aws';
+  const returnType = options.returnType || 'arn';
+
+  // Handle AWS::IAM::ManagedPolicy
+  if (resourceType === 'AWS::IAM::ManagedPolicy') {
+    const { ManagedPolicyName, Path } = properties;
+    if (ManagedPolicyName) {
+      if (returnType === 'name') {
+        return ManagedPolicyName;
+      }
+      const path = Path || '/';
+      return `arn:${partition}:iam::${accountId}:policy${path}${ManagedPolicyName}`;
+    }
+  }
+
+  // Handle AWS::IAM::Role
+  if (resourceType === 'AWS::IAM::Role') {
+    const { RoleName, Path } = properties;
+    if (RoleName) {
+      if (returnType === 'name') {
+        return RoleName;
+      }
+      const path = Path || '/';
+      return `arn:${partition}:iam::${accountId}:role${path}${RoleName}`;
+    }
+  }
+
+  // Handle AWS::S3::Bucket
+  if (resourceType === 'AWS::S3::Bucket') {
+    const { BucketName } = properties;
+    if (BucketName) {
+      if (returnType === 'name') {
+        return BucketName;
+      }
+      return `arn:${partition}:s3:::${BucketName}`;
+    }
+  }
+
+  // Handle AWS::Lambda::Function
+  if (resourceType === 'AWS::Lambda::Function') {
+    const { FunctionName } = properties;
+    if (FunctionName) {
+      if (returnType === 'name') {
+        return FunctionName;
+      }
+      return `arn:${partition}:lambda:${region}:${accountId}:function:${FunctionName}`;
+    }
+  }
+
+  // Handle AWS::SQS::Queue
+  if (resourceType === 'AWS::SQS::Queue') {
+    const { QueueName } = properties;
+    if (QueueName) {
+      if (returnType === 'name') {
+        return QueueName;
+      }
+      return `arn:${partition}:sqs:${region}:${accountId}:${QueueName}`;
+    }
+  }
+
+  // Handle AWS::SNS::Topic
+  if (resourceType === 'AWS::SNS::Topic') {
+    const { TopicName } = properties;
+    if (TopicName) {
+      if (returnType === 'name') {
+        return TopicName;
+      }
+      return `arn:${partition}:sns:${region}:${accountId}:${TopicName}`;
+    }
+  }
+
+  // Handle AWS::DynamoDB::Table
+  if (resourceType === 'AWS::DynamoDB::Table') {
+    const { TableName } = properties;
+    if (TableName) {
+      if (returnType === 'name') {
+        return TableName;
+      }
+      return `arn:${partition}:dynamodb:${region}:${accountId}:table/${TableName}`;
+    }
+  }
+
+  // Handle AWS::RDS::DBInstance
+  if (resourceType === 'AWS::RDS::DBInstance') {
+    const { DBInstanceIdentifier } = properties;
+    if (DBInstanceIdentifier) {
+      if (returnType === 'name') {
+        return DBInstanceIdentifier;
+      }
+      return `arn:${partition}:rds:${region}:${accountId}:db:${DBInstanceIdentifier}`;
+    }
+  }
+
+  // Handle AWS::EC2::SecurityGroup
+  if (resourceType === 'AWS::EC2::SecurityGroup') {
+    const { GroupName } = properties;
+    if (GroupName) {
+      if (returnType === 'name') {
+        return GroupName;
+      }
+      // Security groups need to be referenced by ID in most cases, not ARN
+      // This returns the name for reference purposes
+      return GroupName;
+    }
+  }
+
+  // Handle AWS::IAM::InstanceProfile
+  if (resourceType === 'AWS::IAM::InstanceProfile') {
+    const { InstanceProfileName, Path } = properties;
+    if (InstanceProfileName) {
+      if (returnType === 'name') {
+        return InstanceProfileName;
+      }
+      const path = Path || '/';
+      return `arn:${partition}:iam::${accountId}:instance-profile${path}${InstanceProfileName}`;
+    }
+  }
+
+  // Handle AWS::KMS::Key
+  if (resourceType === 'AWS::KMS::Key') {
+    // KMS keys are referenced by KeyId or KeyArn in properties
+    const { KeyId } = properties;
+    if (KeyId) {
+      if (returnType === 'name') {
+        return KeyId;
+      }
+      return `arn:${partition}:kms:${region}:${accountId}:key/${KeyId}`;
+    }
+  }
+
+  // Handle AWS::SecretsManager::Secret
+  if (resourceType === 'AWS::SecretsManager::Secret') {
+    const { Name } = properties;
+    if (Name) {
+      if (returnType === 'name') {
+        return Name;
+      }
+      return `arn:${partition}:secretsmanager:${region}:${accountId}:secret:${Name}`;
+    }
+  }
+
+  // Add more resource types as needed
+  return null;
 }
 
 async function recurse({ base, scope, cft, ...opts }) {
@@ -481,8 +641,17 @@ async function recurse({ base, scope, cft, ...opts }) {
       });
     }
     if (cft['Fn::RefNow']) {
-      return recurse({ base, scope, cft: cft['Fn::RefNow'], ...opts }).then((logicalName) => {
-        let refName = logicalName;
+      // Handle both simple string and object format for Fn::RefNow
+      // e.g., Fn::RefNow: "MyRole" or Fn::RefNow: { Ref: "MyRole" }
+      return recurse({ base, scope, cft: cft['Fn::RefNow'], ...opts }).then((refInput) => {
+        let refName = refInput;
+        let refOptions = {};
+
+        // Parse the input - could be string or object
+        if (_.isPlainObject(refInput)) {
+          refName = refInput.Ref || refInput.ref;
+          refOptions = _.omit(refInput, ['Ref', 'ref']);
+        }
 
         // Check if this ref name is in the ignores list
         if (opts.refNowIgnores && opts.refNowIgnores.includes(refName)) {
@@ -500,6 +669,36 @@ async function recurse({ base, scope, cft, ...opts }) {
         // Try to resolve the reference
         if (refName in allRefs) {
           return allRefs[refName];
+        }
+
+        // Check if this is a LogicalResourceId in the Resources section
+        if (opts.rootTemplate && _.isPlainObject(opts.rootTemplate)) {
+          const resources = opts.rootTemplate.Resources || {};
+          if (refName in resources) {
+            const resource = resources[refName];
+            const resourceType = resource.Type;
+            const properties = resource.Properties || {};
+            
+            // Determine return type based on key name
+            // If the key ends with "Name" (e.g., RoleName, BucketName), return name/identifier
+            // Otherwise return ARN (default)
+            let returnType = 'arn';
+            if (opts.key && opts.key.endsWith('Name')) {
+              returnType = 'name';
+            }
+            
+            // Try to build an ARN or name for this resource
+            // Merge ref options with global options (ref options take precedence)
+            const resourceOptions = { 
+              returnType,
+              ...opts.refNowReturnType ? { returnType: opts.refNowReturnType } : {},
+              ...refOptions,
+            };
+            const result = buildResourceArn(resourceType, properties, allRefs, resourceOptions);
+            if (result) {
+              return result;
+            }
+          }
         }
 
         // If not found and refNowIgnoreMissing is true, return Ref syntax; otherwise throw error
@@ -538,7 +737,7 @@ async function recurse({ base, scope, cft, ...opts }) {
     }
 
     return Promise.props(
-      _.mapValues(cft, (template) => recurse({ base, scope, cft: template, ...opts })),
+      _.mapValues(cft, (template, key) => recurse({ base, scope, cft: template, key, ...opts })),
     );
   }
 

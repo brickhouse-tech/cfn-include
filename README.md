@@ -1201,6 +1201,61 @@ If an AWS pseudo-parameter is not set via environment variables, it falls back t
 **Error handling:**
 If a reference cannot be resolved, `Fn::RefNow` will throw an error. Ensure all referenced parameters and variables are available via inject, scope, or environment variables.
 
+**Resolving LogicalResourceIds:**
+
+`Fn::RefNow` can also resolve references to CloudFormation Resource LogicalResourceIds, enabling you to construct ARNs or other resource-specific values during template preprocessing. When a reference matches a LogicalResourceId in the Resources section, `Fn::RefNow` will automatically generate the appropriate ARN based on the resource type and properties.
+
+**Supported Resource Types for ARN/Name Resolution:**
+
+- `AWS::IAM::ManagedPolicy` - Returns policy ARN (supports Path)
+- `AWS::IAM::Role` - Returns role ARN (supports Path)
+- `AWS::IAM::InstanceProfile` - Returns instance profile ARN (supports Path)
+- `AWS::S3::Bucket` - Returns bucket ARN
+- `AWS::Lambda::Function` - Returns function ARN
+- `AWS::SQS::Queue` - Returns queue ARN
+- `AWS::SNS::Topic` - Returns topic ARN
+- `AWS::DynamoDB::Table` - Returns table ARN
+- `AWS::RDS::DBInstance` - Returns DB instance ARN
+- `AWS::SecretsManager::Secret` - Returns secret ARN
+- `AWS::KMS::Key` - Returns key ARN
+
+Example with AWS::IAM::ManagedPolicy:
+
+```yaml
+Resources:
+  ObjPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: teststack-CreateTestDBPolicy-16M23YE3CS700
+      Path: /CRAP/
+
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - Fn::RefNow: ObjPolicy  # Resolves to: arn:aws:iam::${AWS_ACCOUNT_ID}:policy/CRAP/teststack-CreateTestDBPolicy-16M23YE3CS700
+```
+
+**Returning Resource Names Instead of ARNs:**
+
+By default, `Fn::RefNow` returns the ARN for supported resource types. However, if the key name ends with `Name` (e.g., `RoleName`, `BucketName`, `FunctionName`), it automatically returns the resource name/identifier instead:
+
+```yaml
+Resources:
+  MyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MyExecutionRole
+
+  RoleArn:
+    Fn::RefNow: MyRole  # Returns: arn:aws:iam::${AWS_ACCOUNT_ID}:role/MyExecutionRole
+
+  RoleName:
+    Fn::RefNow: MyRole  # Returns: MyExecutionRole (because key ends with "Name")
+```
+
+This intuitive approach makes templates more readable and follows natural CloudFormation naming conventions.
+
 **CLI Options for Fn::RefNow:**
 
 The `cfn-include` command provides CLI options to control how unresolved references are handled:
