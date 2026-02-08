@@ -125,10 +125,10 @@ function generateFixtures() {
       MyBucket: {
         Type: 'AWS::S3::Bucket',
         Properties: {
-          BucketName: 'my-simple-bucket'
-        }
-      }
-    }
+          BucketName: 'my-simple-bucket',
+        },
+      },
+    },
   };
   fs.writeFileSync(path.join(fixturesDir, 'simple.json'), JSON.stringify(simple, null, 2));
   
@@ -143,13 +143,13 @@ function generateFixtures() {
             'Bucket${$}': {
               Type: 'AWS::S3::Bucket',
               Properties: {
-                BucketName: { 'Fn::Sub': 'bucket-${$}' }
-              }
-            }
-          }
-        ]
-      }]
-    }
+                BucketName: { 'Fn::Sub': 'bucket-${$}' },
+              },
+            },
+          },
+        ],
+      }],
+    },
   };
   fs.writeFileSync(path.join(fixturesDir, 'map-10.json'), JSON.stringify(map10, null, 2));
   
@@ -164,13 +164,13 @@ function generateFixtures() {
             'Bucket${$}': {
               Type: 'AWS::S3::Bucket',
               Properties: {
-                BucketName: { 'Fn::Sub': 'bucket-${$}' }
-              }
-            }
-          }
-        ]
-      }]
-    }
+                BucketName: { 'Fn::Sub': 'bucket-${$}' },
+              },
+            },
+          },
+        ],
+      }],
+    },
   };
   fs.writeFileSync(path.join(fixturesDir, 'map-100.json'), JSON.stringify(map100, null, 2));
   
@@ -185,13 +185,13 @@ function generateFixtures() {
             'Bucket${$}': {
               Type: 'AWS::S3::Bucket',
               Properties: {
-                BucketName: { 'Fn::Sub': 'bucket-${$}' }
-              }
-            }
-          }
-        ]
-      }]
-    }
+                BucketName: { 'Fn::Sub': 'bucket-${$}' },
+              },
+            },
+          },
+        ],
+      }],
+    },
   };
   fs.writeFileSync(path.join(fixturesDir, 'map-1000.json'), JSON.stringify(map1000, null, 2));
   
@@ -216,41 +216,41 @@ function generateFixtures() {
                         'Resource${outer}${middle}${inner}': {
                           Type: 'AWS::S3::Bucket',
                           Properties: {
-                            BucketName: { 'Fn::Sub': 'bucket-${outer}-${middle}-${inner}' }
-                          }
-                        }
-                      }
-                    ]
-                  }]
-                }
-              ]
-            }]
-          }
-        ]
-      }]
-    }
+                            BucketName: { 'Fn::Sub': 'bucket-${outer}-${middle}-${inner}' },
+                          },
+                        },
+                      },
+                    ],
+                  }],
+                },
+              ],
+            }],
+          },
+        ],
+      }],
+    },
   };
   fs.writeFileSync(path.join(fixturesDir, 'nested-map-3.json'), JSON.stringify(nestedMap3, null, 2));
   
   // Include chain base templates
   const include1 = {
     Level1: {
-      'Fn::Include': 'file://' + path.join(fixturesDir, 'include-level2.json')
-    }
+      'Fn::Include': 'file://' + path.join(fixturesDir, 'include-level2.json'),
+    },
   };
   fs.writeFileSync(path.join(fixturesDir, 'include-level1.json'), JSON.stringify(include1, null, 2));
   
   const include2 = {
     Level2: {
-      'Fn::Include': 'file://' + path.join(fixturesDir, 'include-level3.json')
-    }
+      'Fn::Include': 'file://' + path.join(fixturesDir, 'include-level3.json'),
+    },
   };
   fs.writeFileSync(path.join(fixturesDir, 'include-level2.json'), JSON.stringify(include2, null, 2));
   
   const include3 = {
     Level3: {
-      Value: 'deepest-level'
-    }
+      Value: 'deepest-level',
+    },
   };
   fs.writeFileSync(path.join(fixturesDir, 'include-level3.json'), JSON.stringify(include3, null, 2));
   
@@ -270,7 +270,7 @@ function generateFixtures() {
   for (let i = 0; i < 10; i++) {
     fs.writeFileSync(
       path.join(globDir, `resource-${i}.json`),
-      JSON.stringify({ [`Resource${i}`]: { Type: 'AWS::S3::Bucket' } }, null, 2)
+      JSON.stringify({ [`Resource${i}`]: { Type: 'AWS::S3::Bucket' } }, null, 2),
     );
   }
   
@@ -280,7 +280,7 @@ function generateFixtures() {
   for (let i = 0; i < 100; i++) {
     fs.writeFileSync(
       path.join(globDir100, `resource-${i}.json`),
-      JSON.stringify({ [`Resource${i}`]: { Type: 'AWS::S3::Bucket' } }, null, 2)
+      JSON.stringify({ [`Resource${i}`]: { Type: 'AWS::S3::Bucket' } }, null, 2),
     );
   }
   
@@ -301,11 +301,11 @@ function generateFixtures() {
               '${service}Bucket': {
                 Type: 'AWS::S3::Bucket',
                 Properties: {
-                  BucketName: { 'Fn::Sub': '${AWS::StackName}-${service}' }
-                }
-              }
-            }
-          ]
+                  BucketName: { 'Fn::Sub': '${AWS::StackName}-${service}' },
+                },
+              },
+            },
+          ],
         },
         {
           'Fn::Map': [
@@ -315,13 +315,13 @@ function generateFixtures() {
               'Lambda${idx}': {
                 Type: 'AWS::Lambda::Function',
                 Properties: {
-                  FunctionName: { 'Fn::Sub': 'function-${idx}' }
-                }
-              }
-            }
-          ]
-        }
-      ]
+                  FunctionName: { 'Fn::Sub': 'function-${idx}' },
+                },
+              },
+            },
+          ],
+        },
+      ],
     },
     Outputs: {
       'Fn::Merge': [
@@ -332,13 +332,13 @@ function generateFixtures() {
             {
               '${service}Output': {
                 Value: { 'Fn::Ref': '${service}Bucket' },
-                Export: { Name: { 'Fn::Sub': '${AWS::StackName}-${service}' } }
-              }
-            }
-          ]
-        }
-      ]
-    }
+                Export: { Name: { 'Fn::Sub': '${AWS::StackName}-${service}' } },
+              },
+            },
+          ],
+        },
+      ],
+    },
   };
   fs.writeFileSync(path.join(fixturesDir, 'complex.json'), JSON.stringify(complex, null, 2));
   
@@ -428,10 +428,10 @@ async function main() {
       'Fn::Merge': [{
         'Fn::Include': {
           location: path.join(fixturesDir, 'glob-test', '*.json'),
-          isGlob: true
-        }
-      }]
-    }
+          isGlob: true,
+        },
+      }],
+    },
   };
   results.push(await runBenchmark('Glob (10 files)', async () => {
     await include({
@@ -447,10 +447,10 @@ async function main() {
       'Fn::Merge': [{
         'Fn::Include': {
           location: path.join(fixturesDir, 'glob-test-100', '*.json'),
-          isGlob: true
-        }
-      }]
-    }
+          isGlob: true,
+        },
+      }],
+    },
   };
   results.push(await runBenchmark('Glob (100 files)', async () => {
     await include({
@@ -479,7 +479,7 @@ async function main() {
     const ratioColor = ratio > 10 ? colors.red : ratio > 3 ? colors.yellow : colors.green;
     console.log(
       `${r.name.padEnd(40)} ${colors.green}${formatDuration(r.avg).padStart(12)}${colors.reset} ` +
-      `(${ratioColor}${ratio.toFixed(1)}x${colors.reset})`
+      `(${ratioColor}${ratio.toFixed(1)}x${colors.reset})`,
     );
   });
   
@@ -495,12 +495,12 @@ async function main() {
       minMs: r.min,
       maxMs: r.max,
       memoryDeltaBytes: r.memoryDelta,
-    }))
+    })),
   };
   
   fs.writeFileSync(
     path.join(__dirname, 'results.json'),
-    JSON.stringify(jsonResults, null, 2)
+    JSON.stringify(jsonResults, null, 2),
   );
   console.log(`\n${colors.green}✓ Results saved to benchmarks/results.json${colors.reset}`);
 }
