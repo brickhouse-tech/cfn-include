@@ -23,13 +23,13 @@ const fixturesDir = path.join(__dirname, '..', 'regression-fixtures');
 
 // Load fixtures
 const nested3Levels = JSON.parse(
-  fs.readFileSync(path.join(fixturesDir, 'nested-3-levels.json'))
+  fs.readFileSync(path.join(fixturesDir, 'nested-3-levels.json')),
 );
 const scopeCollision = JSON.parse(
-  fs.readFileSync(path.join(fixturesDir, 'scope-collision.json'))
+  fs.readFileSync(path.join(fixturesDir, 'scope-collision.json')),
 );
 const edgeCases = JSON.parse(
-  fs.readFileSync(path.join(fixturesDir, 'edge-cases.json'))
+  fs.readFileSync(path.join(fixturesDir, 'edge-cases.json')),
 );
 
 module.exports = {
