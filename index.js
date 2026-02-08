@@ -2,7 +2,7 @@ const url = require('url');
 const path = require('path');
 const { readFile } = require('fs/promises');
 const _ = require('lodash');
-const { globSync } = require('glob');
+const { glob } = require('glob');
 const Promise = require('bluebird');
 const sortObject = require('@znemz/sort-object');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
@@ -269,7 +269,7 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
     }
     if (cft['Fn::Filenames']) {
       return recurse({ base, scope, cft: cft['Fn::Filenames'], rootTemplate, caller: 'Fn::Filenames', ...opts }).then(
-        function (json) {
+        async function (json) {
           json = _.isPlainObject(json) ? { ...json } : { location: json };
           if (json.doLog) {
 
@@ -284,7 +284,7 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
             const absolute = location.relative
               ? path.join(path.dirname(base.path), location.host, location.path || '')
               : [location.host, location.path].join('');
-            const globs = globSync(absolute).sort();
+            const globs = (await glob(absolute)).sort();
             if (json.omitExtension) {
               return globs.map((f) => path.basename(f, path.extname(f)));
             }
@@ -730,7 +730,7 @@ async function fnInclude({ base, scope, cft, ...opts }) {
 
     handleInjectSetup();
     if (isGlob(cft, absolute)) {
-      const paths = globSync(absolute).sort();
+      const paths = (await glob(absolute)).sort();
       const template = yaml.load(paths.map((_p) => `- Fn::Include: file://${_p}`).join('\n'));
       return recurse({ base, scope, cft: template, rootTemplate: template, ...opts });
     }
