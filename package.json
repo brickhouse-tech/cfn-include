@@ -1,6 +1,6 @@
 {
   "name": "@znemz/cfn-include",
-  "version": "2.1.23",
+  "version": "2.1.24",
   "description": "Preprocessor for CloudFormation templates with support for loops and flexible include statements",
   "keywords": [
     "aws",
@@ -22,8 +22,6 @@
     "email": "nemtcan@gmail.com"
   },
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -34,6 +32,8 @@
       "import": "./dist/lib/*.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "cfn-include": "./dist/cli.js"
   },
