@@ -1,0 +1,5 @@
+{
+  "Resource75": {
+    "Type": "AWS::S3::Bucket"
+  }
+}

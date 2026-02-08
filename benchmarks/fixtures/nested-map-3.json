@@ -1,0 +1,54 @@
+{
+  "Resources": {
+    "Fn::Merge": [
+      {
+        "Fn::Map": [
+          [
+            "a",
+            "b",
+            "c"
+          ],
+          "outer",
+          {
+            "Fn::Merge": [
+              {
+                "Fn::Map": [
+                  [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "middle",
+                  {
+                    "Fn::Merge": [
+                      {
+                        "Fn::Map": [
+                          [
+                            1,
+                            2,
+                            3
+                          ],
+                          "inner",
+                          {
+                            "Resource${outer}${middle}${inner}": {
+                              "Type": "AWS::S3::Bucket",
+                              "Properties": {
+                                "BucketName": {
+                                  "Fn::Sub": "bucket-${outer}-${middle}-${inner}"
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
