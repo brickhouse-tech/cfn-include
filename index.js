@@ -2,12 +2,11 @@ const url = require('url');
 const path = require('path');
 const _ = require('lodash');
 const { glob } = require('glob');
-const Promise = require('bluebird');
 const sortObject = require('@znemz/sort-object');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { addProxyToClient } = require('aws-sdk-v3-proxy');
 
-const pathParse = require('path-parse');
+// path.parse is native in Node.js - no need for path-parse package
 const deepMerge = require('deepmerge');
 const { isTaggableResource } = require('@znemz/cft-utils/src/resources/taggable');
 
@@ -27,6 +26,7 @@ const { isOurExplicitFunction } = require('./lib/schema');
 const { getAwsPseudoParameters, buildResourceArn } = require('./lib/internals');
 const { cachedReadFile } = require('./lib/cache');
 const { createChildScope } = require('./lib/scope');
+const { promiseProps } = require('./lib/promise-utils');
 
 /**
  * @param  {object} options
@@ -585,7 +585,7 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
       });
     }
 
-    return Promise.props(
+    return promiseProps(
       _.mapValues(cft, (template, key) => recurse({ base, scope, cft: template, key, rootTemplate, caller: 'recurse:isPlainObject:end', ...opts })),
     );
   }
@@ -743,7 +743,7 @@ async function fnInclude({ base, scope, cft, ...opts }) {
     body = cachedReadFile(absolute).then(procTemplate);
     absolute = `${location.protocol}://${absolute}`;
   } else if (location.protocol === 's3') {
-    const basedir = pathParse(base.path).dir;
+    const basedir = path.parse(base.path).dir;
     const bucket = location.relative ? base.host : location.host;
 
     let key = location.relative ? url.resolve(`${basedir}/`, location.raw) : location.path;
@@ -759,7 +759,7 @@ async function fnInclude({ base, scope, cft, ...opts }) {
       .then((res) => res.Body.toString())
       .then(procTemplate);
   } else if (location.protocol && location.protocol.match(/^https?$/)) {
-    const basepath = `${pathParse(base.path).dir}/`;
+    const basepath = `${path.parse(base.path).dir}/`;
 
     absolute = location.relative
       ? url.resolve(`${location.protocol}://${base.host}${basepath}`, location.raw)

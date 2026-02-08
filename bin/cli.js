@@ -3,7 +3,7 @@
 const exec = require('child_process').execSync;
 const path = require('path');
 const _ = require('lodash');
-const pathParse = require('path-parse');
+// path.parse is native in Node.js - no need for path-parse package
 
 const include = require('../index');
 const yaml = require('../lib/yaml');
@@ -118,7 +118,7 @@ if (opts.path) {
   let location;
   const protocol = opts.path.match(/^\w+:\/\//);
   if (protocol) location = opts.path;
-  else if (pathParse(opts.path).root) location = `file://${opts.path}`;
+  else if (path.parse(opts.path).root) location = `file://${opts.path}`;
   else location = `file://${path.join(process.cwd(), opts.path)}`;
   promise = include({
     url: location,
