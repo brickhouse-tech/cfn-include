@@ -2,15 +2,64 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
-## 2.1.24 (2026-02-08)
+## [3.0.0](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.24...v3.0.0) (2026-02-08)
 
-## 2.1.23 (2026-02-08)
+### ⚠ BREAKING CHANGES
 
-## 2.1.22 (2026-02-08)
+* **ESM-only:** Package is now ESM-only. CommonJS `require()` no longer works. Use dynamic `import()` or migrate to ESM.
 
-## 2.1.21 (2026-02-08)
+### Features
 
-## 2.1.20 (2026-02-08)
+* **Phase 3a:** add TypeScript source with build pipeline ([4b576b7](https://github.com/brickhouse-tech/cfn-include/commit/4b576b7))
+  - Create src/ directory structure (lib/, types/, lib/include/)
+  - Add comprehensive type definitions in src/types/
+  - Convert 13 lib files to TypeScript
+  - Add main src/index.ts with all Fn:: handlers
+  - Configure TypeScript (strict mode, ES2022, NodeNext)
+
+## [2.1.24](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.23...v2.1.24) (2026-02-08)
+
+*Released in error - see 3.0.0*
+
+## [2.1.23](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.22...v2.1.23) (2026-02-08)
+
+*No notable changes*
+
+## [2.1.22](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.21...v2.1.22) (2026-02-08)
+
+### ⚠ BREAKING CHANGES
+
+* **ESM:** Package converted to ES Modules. CommonJS `require()` no longer works.
+
+### Features
+
+* convert to ES Modules (ESM) ([0ceb431](https://github.com/brickhouse-tech/cfn-include/commit/0ceb431))
+
+### Bug Fixes
+
+* convert benchmark runner to ESM ([ba70ddb](https://github.com/brickhouse-tech/cfn-include/commit/ba70ddb))
+* rename config files to .cjs for ESM compatibility ([d77608a](https://github.com/brickhouse-tech/cfn-include/commit/d77608a))
+
+## [2.1.21](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.20...v2.1.21) (2026-02-08)
+
+### Refactor
+
+* remove bluebird and path-parse dependencies ([9ae7a59](https://github.com/brickhouse-tech/cfn-include/commit/9ae7a59))
+
+## [2.1.20](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.19...v2.1.20) (2026-02-08)
+
+### Performance
+
+* **Phase 1 optimizations:**
+  - async glob for Fn::Include ([6409511](https://github.com/brickhouse-tech/cfn-include/commit/6409511))
+  - file content cache for Fn::Include ([0724a23](https://github.com/brickhouse-tech/cfn-include/commit/0724a23))
+  - replace simple lodash calls with native alternatives ([0ad6df6](https://github.com/brickhouse-tech/cfn-include/commit/0ad6df6))
+  - regex pre-compilation cache in replaceEnv ([34f2e93](https://github.com/brickhouse-tech/cfn-include/commit/34f2e93))
+  - Object.create() for O(1) scope creation in Fn::Map ([22aae96](https://github.com/brickhouse-tech/cfn-include/commit/22aae96))
+
+### Tests
+
+* add regression test suite for Phase 1 optimizations ([def9fd2](https://github.com/brickhouse-tech/cfn-include/commit/def9fd2))
 
 ## 2.1.19 (2026-02-08)
 
