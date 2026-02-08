@@ -22,27 +22,37 @@
     "email": "nemtcan@gmail.com"
   },
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./index.js",
-    "./lib/*": "./lib/*"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./lib/*": {
+      "types": "./dist/lib/*.d.ts",
+      "import": "./dist/lib/*.js"
+    }
   },
   "bin": {
-    "cfn-include": "bin/cli.js"
+    "cfn-include": "./dist/cli.js"
   },
   "files": [
-    "index.js",
-    "bin/",
-    "lib/"
+    "dist/"
   ],
   "scripts": {
     "better-audit": "better-npm-audit audit",
+    "build": "tsc",
+    "build:clean": "rm -rf dist && npm run build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "sort-package-json",
+    "prepublishOnly": "npm run build:clean",
     "serve": "serve ./t/fixtures -l 9999",
-    "test": "npm run test:this",
+    "test": "npm run build && npm run test:this",
     "test:run": "sleep 1 && mocha --timeout 20000 --bail t/include.js t/cli.js t/replaceEnv.js",
-    "test:this": "run-p -r serve test:run"
+    "test:this": "run-p -r serve test:run",
+    "typecheck": "tsc --noEmit"
   },
   "overrides": {
     "fast-xml-parser": "5.3.4"
@@ -64,6 +74,8 @@
   "devDependencies": {
     "@commitlint/cli": "^20",
     "@commitlint/config-conventional": "^20",
+    "@types/lodash": "^4.17.23",
+    "@types/node": "^25.2.2",
     "better-npm-audit": "3.11.0",
     "commit-and-tag-version": "12",
     "commitlint": "20",
@@ -75,7 +87,8 @@
     "npm-run-all": "4.1.5",
     "prettier": "3",
     "serve": "14.2.5",
-    "sort-package-json": "3.6.1"
+    "sort-package-json": "3.6.1",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=20.19"
