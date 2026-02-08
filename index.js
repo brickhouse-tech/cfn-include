@@ -25,7 +25,6 @@ const replaceEnv = require('./lib/replaceEnv');
 const { lowerCamelCase, upperCamelCase } = require('./lib/utils');
 const { isOurExplicitFunction } = require('./lib/schema');
 const { getAwsPseudoParameters, buildResourceArn } = require('./lib/internals');
-const { createChildScope } = require('./lib/scope');
 const { cachedReadFile } = require('./lib/cache');
 
 /**
@@ -110,9 +109,7 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
   if (opts.doLog) {
     console.log({ base, scope, cft, rootTemplate, caller, ...opts });
   }
-  // NOTE: We don't clone/create child scope here anymore.
-  // With prototype-chain scopes, Fn::Map creates children only when adding variables.
-  // This avoids unnecessary intermediate scopes that break prototype lookups.
+  scope = _.clone(scope);
   if (Array.isArray(cft)) {
     return Promise.all(cft.map((o) => recurse({ base, scope, cft: o, rootTemplate, caller: 'recurse:isArray', ...opts })));
   }
@@ -140,14 +137,13 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
         placeholder = '_';
       }
       return PromiseExt.mapX(recurse({ base, scope, cft: list, rootTemplate, caller: 'Fn::Map', ...opts }), (replace, key) => {
-        // Use Object.create() for O(1) child scope creation instead of O(n) clone
-        const additions = { [placeholder]: replace };
+        scope = _.clone(scope);
+        scope[placeholder] = replace;
         if (hasindex) {
-          additions[idx] = key;
+          scope[idx] = key;
         }
-        const childScope = createChildScope(scope, additions);
-        const replaced = findAndReplace(childScope, _.cloneDeep(body));
-        return recurse({ base, scope: childScope, cft: replaced, rootTemplate, caller: 'Fn::Map', ...opts });
+        const replaced = findAndReplace(scope, _.cloneDeep(body));
+        return recurse({ base, scope, cft: replaced, rootTemplate, caller: 'Fn::Map', ...opts });
       }).then((_cft) => {
         if (hassize) {
           _cft = findAndReplace({ [sz]: _cft.length }, _cft);
@@ -598,23 +594,20 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
 }
 
 function findAndReplace(scope, object) {
-  if (typeof object === 'string') {
-    // Use for...in to walk prototype chain (Object.create() based scopes)
-    for (const find in scope) {
+  if (_.isString(object)) {
+    _.forEach(scope, function (replace, find) {
       if (object === find) {
-        object = scope[find];
+        object = replace;
       }
-    }
+    });
   }
-  if (typeof object === 'string') {
-    // Use for...in to walk prototype chain (Object.create() based scopes)
-    for (const find in scope) {
-      const replace = scope[find];
+  if (_.isString(object)) {
+    _.forEach(scope, function (replace, find) {
       const regex = new RegExp(`\\\${${find}}`, 'g');
       if (find !== '_' && object.match(regex)) {
         object = object.replace(regex, replace);
       }
-    }
+    });
   }
   if (Array.isArray(object)) {
     object = object.map(_.bind(findAndReplace, this, scope));
@@ -622,7 +615,7 @@ function findAndReplace(scope, object) {
     object = _.mapKeys(object, function (value, key) {
       return findAndReplace(scope, key);
     });
-    Object.keys(object).forEach(function (key) {
+    _.keys(object).forEach(function (key) {
       if (key === 'Fn::Map') return;
       object[key] = findAndReplace(scope, object[key]);
     });

@@ -36,7 +36,7 @@
     "prepare": "sort-package-json",
     "serve": "serve ./t/fixtures -l 9999",
     "test": "npm run test:this",
-    "test:run": "sleep 1 && mocha --timeout 20000 --bail t/include.js t/cli.js t/replaceEnv.js t/scope.js",
+    "test:run": "sleep 1 && mocha --timeout 20000 --bail t/include.js t/cli.js t/replaceEnv.js",
     "test:this": "run-p -r serve test:run"
   },
   "overrides": {
