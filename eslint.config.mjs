@@ -5,6 +5,15 @@ import mochaPlugin from "eslint-plugin-mocha";
 
 export default defineConfig([
   {
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'lib/**',
+      'src/**',
+      'tmp/**',
+    ]
+  },
+  {
     files: ["**/*.js"],
     languageOptions: {
       globals: {
@@ -22,12 +31,5 @@ export default defineConfig([
       "no-unused-vars": "warn",
       "comma-dangle": ["error", "always-multiline"],
     },
-    ignores: [
-      'node_modules',
-      'node_modules/**/*.js',
-      'dist',
-      'lib',
-      'tmp',
-    ]
   },
 ]);
