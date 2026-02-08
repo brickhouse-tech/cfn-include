@@ -1,78 +1,78 @@
 {
-  "timestamp": "2026-02-08T18:11:56.440Z",
+  "timestamp": "2026-02-08T19:26:11.799Z",
   "nodeVersion": "v22.22.0",
   "platform": "darwin",
   "arch": "arm64",
   "results": [
     {
       "name": "Simple Template (baseline)",
-      "avgMs": 0.3760584000000051,
-      "minMs": 0.16200000000000614,
-      "maxMs": 1.0092090000000127,
-      "memoryDeltaBytes": 303952
+      "avgMs": 0.38602479999999845,
+      "minMs": 0.20162499999999284,
+      "maxMs": 0.9760410000000093,
+      "memoryDeltaBytes": 303560
     },
     {
       "name": "Fn::Map (10 items)",
-      "avgMs": 1.6977333999999928,
-      "minMs": 1.3721670000000046,
-      "maxMs": 2.4862079999999764,
-      "memoryDeltaBytes": -1763328
+      "avgMs": 1.6568918000000026,
+      "minMs": 1.3504159999999956,
+      "maxMs": 2.4347920000000016,
+      "memoryDeltaBytes": -1821872
     },
     {
       "name": "Fn::Map (100 items)",
-      "avgMs": 5.699275000000005,
-      "minMs": 3.221917000000019,
-      "maxMs": 11.950000000000017,
-      "memoryDeltaBytes": -5786384
+      "avgMs": 5.832691800000004,
+      "minMs": 2.911541999999997,
+      "maxMs": 10.656125000000003,
+      "memoryDeltaBytes": 632384
     },
     {
       "name": "Fn::Map (1000 items)",
-      "avgMs": 28.46569999999999,
-      "minMs": 27.931165999999962,
-      "maxMs": 29.007542,
-      "memoryDeltaBytes": 5221744
+      "avgMs": 26.32425839999999,
+      "minMs": 25.722916999999967,
+      "maxMs": 26.77883300000002,
+      "memoryDeltaBytes": 10461656
     },
     {
       "name": "Nested Fn::Map (3-deep, 3x3x3=27 items)",
-      "avgMs": 3.7033664000000046,
-      "minMs": 3.3335409999999683,
-      "maxMs": 4.05479200000002,
-      "memoryDeltaBytes": 4920744
+      "avgMs": 3.311683200000016,
+      "minMs": 3.129542000000015,
+      "maxMs": 3.4802080000000046,
+      "memoryDeltaBytes": 4832808
     },
     {
       "name": "Fn::Include chain (3-deep)",
-      "avgMs": 0.626566600000001,
-      "minMs": 0.45583299999998417,
-      "maxMs": 0.9602500000000305,
-      "memoryDeltaBytes": -12612048
+      "avgMs": 0.4661336000000006,
+      "minMs": 0.3085839999999962,
+      "maxMs": 0.6811250000000086,
+      "memoryDeltaBytes": -12728920
     },
     {
       "name": "Fn::Include chain (10-deep)",
-      "avgMs": 1.9377081999999972,
-      "minMs": 1.8670000000000186,
-      "maxMs": 1.9903339999999616,
-      "memoryDeltaBytes": 2607624
+      "avgMs": 1.434258199999988,
+      "minMs": 1.4209579999999846,
+      "maxMs": 1.4517910000000143,
+      "memoryDeltaBytes": 2197608
     },
     {
       "name": "Glob (10 files)",
-      "avgMs": 0.054025000000001454,
-      "minMs": 0.04825000000005275,
-      "maxMs": 0.06941699999998718,
+      "avgMs": 0.0561584000000039,
+      "minMs": 0.049374999999997726,
+      "maxMs": 0.070541999999989,
       "memoryDeltaBytes": 45664
     },
     {
       "name": "Glob (100 files)",
-      "avgMs": 0.05366680000001907,
-      "minMs": 0.047584000000028936,
-      "maxMs": 0.06725000000000136,
+      "avgMs": 0.04930839999998397,
+      "minMs": 0.04787499999997635,
+      "maxMs": 0.05216699999999719,
       "memoryDeltaBytes": 45736
     },
     {
       "name": "Complex template (mixed features)",
-      "avgMs": 0.9749168000000055,
-      "minMs": 0.8508340000000203,
-      "maxMs": 1.1594589999999698,
-      "memoryDeltaBytes": 3533864
+      "avgMs": 0.8393165999999838,
+      "minMs": 0.7839159999999765,
+      "maxMs": 0.9090840000000071,
+      "memoryDeltaBytes": 3536128
     }
   ]
 }

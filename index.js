@@ -1,8 +1,7 @@
 const url = require('url');
 const path = require('path');
-const { readFile } = require('fs/promises');
 const _ = require('lodash');
-const { globSync } = require('glob');
+const { glob } = require('glob');
 const Promise = require('bluebird');
 const sortObject = require('@znemz/sort-object');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
@@ -26,6 +25,7 @@ const replaceEnv = require('./lib/replaceEnv');
 const { lowerCamelCase, upperCamelCase } = require('./lib/utils');
 const { isOurExplicitFunction } = require('./lib/schema');
 const { getAwsPseudoParameters, buildResourceArn } = require('./lib/internals');
+const { cachedReadFile } = require('./lib/cache');
 
 /**
  * @param  {object} options
@@ -60,7 +60,7 @@ module.exports = async function (options) {
   const base = parseLocation(options.url);
   const scope = options.scope || {};
   if (base.relative) throw new Error('url cannot be relative');
-  template = _.isUndefined(template)
+  template = !template
     ? fnInclude({ base, scope, cft: options.url, ...options })
     : template;
   // Resolve template if it's a promise to extract the root template for reference lookups
@@ -110,7 +110,7 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
     console.log({ base, scope, cft, rootTemplate, caller, ...opts });
   }
   scope = _.clone(scope);
-  if (_.isArray(cft)) {
+  if (Array.isArray(cft)) {
     return Promise.all(cft.map((o) => recurse({ base, scope, cft: o, rootTemplate, caller: 'recurse:isArray', ...opts })));
   }
   if (_.isPlainObject(cft)) {
@@ -175,24 +175,24 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
     }
     if (cft['Fn::Flatten']) {
       return recurse({ base, scope, cft: cft['Fn::Flatten'], rootTemplate, caller: 'Fn::Flatten', ...opts }).then(function (json) {
-        return _.flatten(json);
+        return json.flat();
       });
     }
     if (cft['Fn::FlattenDeep']) {
       return recurse({ base, scope, cft: cft['Fn::FlattenDeep'], rootTemplate, caller: 'Fn::FlattenDeep', ...opts }).then(
         function (json) {
-          return _.flattenDeep(json);
+          return json.flat(Infinity);
         },
       );
     }
     if (cft['Fn::Uniq']) {
       return recurse({ base, scope, cft: cft['Fn::Uniq'], rootTemplate, caller: 'Fn::Uniq', ...opts }).then(function (json) {
-        return _.uniq(json);
+        return [...new Set(json)];
       });
     }
     if (cft['Fn::Compact']) {
       return recurse({ base, scope, cft: cft['Fn::Compact'], rootTemplate, caller: 'Fn::Compact', ...opts }).then(function (json) {
-        return _.compact(json);
+        return json.filter(Boolean);
       });
     }
     if (cft['Fn::Concat']) {
@@ -269,7 +269,7 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
     }
     if (cft['Fn::Filenames']) {
       return recurse({ base, scope, cft: cft['Fn::Filenames'], rootTemplate, caller: 'Fn::Filenames', ...opts }).then(
-        function (json) {
+        async function (json) {
           json = _.isPlainObject(json) ? { ...json } : { location: json };
           if (json.doLog) {
 
@@ -284,7 +284,7 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
             const absolute = location.relative
               ? path.join(path.dirname(base.path), location.host, location.path || '')
               : [location.host, location.path].join('');
-            const globs = globSync(absolute).sort();
+            const globs = (await glob(absolute)).sort();
             if (json.omitExtension) {
               return globs.map((f) => path.basename(f, path.extname(f)));
             }
@@ -587,7 +587,7 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
     );
   }
 
-  if (_.isUndefined(cft)) {
+  if (cft === undefined) {
     return null;
   }
   return replaceEnv(cft, opts.inject, opts.doEnv);
@@ -609,7 +609,7 @@ function findAndReplace(scope, object) {
       }
     });
   }
-  if (_.isArray(object)) {
+  if (Array.isArray(object)) {
     object = object.map(_.bind(findAndReplace, this, scope));
   } else if (_.isPlainObject(object)) {
     object = _.mapKeys(object, function (value, key) {
@@ -632,7 +632,7 @@ function interpolate(lines, context) {
         const match = _line.match(/^{{(\w+)}}$/);
         const value = match ? context[match[1]] : undefined;
         if (!match) return _line;
-        if (_.isUndefined(value)) {
+        if (value === undefined) {
           return '';
         }
         return value;
@@ -661,7 +661,7 @@ function fnIncludeOptsFromArray(cft, opts) {
 function fnIncludeOpts(cft, opts) {
   if (_.isPlainObject(cft)) {
     cft = _.merge(cft, _.cloneDeep(opts));
-  } else if (_.isArray(cft)) {
+  } else if (Array.isArray(cft)) {
     cft = fnIncludeOptsFromArray(cft, opts);
   } else {
     // should be string{
@@ -730,11 +730,11 @@ async function fnInclude({ base, scope, cft, ...opts }) {
 
     handleInjectSetup();
     if (isGlob(cft, absolute)) {
-      const paths = globSync(absolute).sort();
+      const paths = (await glob(absolute)).sort();
       const template = yaml.load(paths.map((_p) => `- Fn::Include: file://${_p}`).join('\n'));
       return recurse({ base, scope, cft: template, rootTemplate: template, ...opts });
     }
-    body = readFile(absolute).then(String).then(procTemplate);
+    body = cachedReadFile(absolute).then(procTemplate);
     absolute = `${location.protocol}://${absolute}`;
   } else if (location.protocol === 's3') {
     const basedir = pathParse(base.path).dir;
@@ -829,7 +829,7 @@ async function handleIncludeBody({ scope, args, body, absolute }) {
             return temp;
           }
           // once fully recursed we can query the resultant template
-          const query = _.isString(args.query)
+          const query = typeof args.query === 'string'
             ? replaceEnv(args.query, args.inject, args.doEnv)
             : await recurse({
               base: parseLocation(absolute),
@@ -858,7 +858,7 @@ async function handleIncludeBody({ scope, args, body, absolute }) {
             lines = interpolate(lines, args.context);
           }
           return {
-            'Fn::Join': ['', _.flatten(lines)],
+            'Fn::Join': ['', lines.flat()],
           };
         });
       }

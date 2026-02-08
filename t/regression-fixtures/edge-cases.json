@@ -1,0 +1,58 @@
+{
+  "description": "Edge cases: empty arrays, single items, null values",
+  "tests": [
+    {
+      "name": "Empty array in Fn::Map",
+      "template": { "Fn::Map": [[], { "item": "_" }] },
+      "expected": []
+    },
+    {
+      "name": "Single item array",
+      "template": { "Fn::Map": [["only"], { "item": "_" }] },
+      "expected": [{ "item": "only" }]
+    },
+    {
+      "name": "Null preservation in scope",
+      "template": {
+        "Fn::Map": [
+          [null, "value", null],
+          { "item": "_" }
+        ]
+      },
+      "expected": [
+        { "item": null },
+        { "item": "value" },
+        { "item": null }
+      ]
+    },
+    {
+      "name": "Numeric scope values",
+      "template": {
+        "Fn::Map": [
+          [0, 1, 42, -5],
+          { "num": "_" }
+        ]
+      },
+      "expected": [
+        { "num": 0 },
+        { "num": 1 },
+        { "num": 42 },
+        { "num": -5 }
+      ]
+    },
+    {
+      "name": "Boolean scope values",
+      "template": {
+        "Fn::Map": [
+          [true, false, true],
+          { "bool": "_" }
+        ]
+      },
+      "expected": [
+        { "bool": true },
+        { "bool": false },
+        { "bool": true }
+      ]
+    }
+  ]
+}

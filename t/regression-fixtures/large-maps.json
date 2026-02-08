@@ -1,0 +1,27 @@
+{
+  "description": "Performance regression tests with large datasets",
+  "note": "These are generated dynamically in the test to avoid massive fixture files",
+  "sizes": {
+    "small": 100,
+    "medium": 500,
+    "large": 1000
+  },
+  "templatePattern": {
+    "Fn::Map": [
+      "ITEMS_PLACEHOLDER",
+      {
+        "id": "_",
+        "processed": true,
+        "nested": {
+          "Fn::Map": [
+            ["a", "b", "c"],
+            {
+              "sub": "_",
+              "parentId": "$id"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
