@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.0.0](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.24...v4.0.0) (2026-02-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **release:** Package is now ESM-only. CommonJS require() no longer works.
+
+- Fix version bump (should have been 3.0.0 due to ESM breaking change)
+- Update CHANGELOG.md with Phase 1-3 changes
+- Add .versionrc.json for commit-and-tag-version config
+
+* **release:** 3.0.0 ([3d0bf89](https://github.com/brickhouse-tech/cfn-include/commit/3d0bf89a39d73d0f9645f96b6d56bd3ec0dce6a0))
+
+
+### Bug Fixes
+
+* **ci:** detect breaking changes in merge commits ([09f848c](https://github.com/brickhouse-tech/cfn-include/commit/09f848c434d9b287283fd9c48ed8e48d19a3cbd1))
+
 ## [3.0.0](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.24...v3.0.0) (2026-02-08)
 
 ### ⚠ BREAKING CHANGES
