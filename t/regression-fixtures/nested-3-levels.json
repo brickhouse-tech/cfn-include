@@ -1,0 +1,169 @@
+{
+  "description": "3-level deep nested Fn::Map scenarios",
+  "tests": [
+    {
+      "name": "3-level nested maps with different placeholders",
+      "template": {
+        "Fn::Map": [
+          ["A", "B"], "outer", {
+            "Fn::Map": [
+              [1, 2], "middle", {
+                "Fn::Map": [
+                  ["x", "y"], "inner", {
+                    "outer": "outer",
+                    "middle": "middle",
+                    "inner": "inner"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "output": [
+        [
+          [
+            { "outer": "A", "middle": "1", "inner": "x" },
+            { "outer": "A", "middle": "1", "inner": "y" }
+          ],
+          [
+            { "outer": "A", "middle": "2", "inner": "x" },
+            { "outer": "A", "middle": "2", "inner": "y" }
+          ]
+        ],
+        [
+          [
+            { "outer": "B", "middle": "1", "inner": "x" },
+            { "outer": "B", "middle": "1", "inner": "y" }
+          ],
+          [
+            { "outer": "B", "middle": "2", "inner": "x" },
+            { "outer": "B", "middle": "2", "inner": "y" }
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "3-level nested with flatten",
+      "template": {
+        "Fn::Flatten": {
+          "Fn::Map": [
+            ["A", "B"], "L1", {
+              "Fn::Flatten": {
+                "Fn::Map": [
+                  [1, 2], "L2", {
+                    "Fn::Map": [
+                      ["x", "y"], "L3", {
+                        "combined": "L1-L2-L3"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "output": [
+        { "combined": "A-1-x" },
+        { "combined": "A-1-y" },
+        { "combined": "A-2-x" },
+        { "combined": "A-2-y" },
+        { "combined": "B-1-x" },
+        { "combined": "B-1-y" },
+        { "combined": "B-2-x" },
+        { "combined": "B-2-y" }
+      ]
+    },
+    {
+      "name": "4-level deep nesting",
+      "template": {
+        "Fn::Flatten": {
+          "Fn::Map": [
+            ["a", "b"], "L1", {
+              "Fn::Flatten": {
+                "Fn::Map": [
+                  ["c", "d"], "L2", {
+                    "Fn::Flatten": {
+                      "Fn::Map": [
+                        ["e", "f"], "L3", {
+                          "Fn::Map": [
+                            ["g", "h"], "L4", {
+                              "key": "L1-L2-L3-L4"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "output": [
+        { "key": "a-c-e-g" },
+        { "key": "a-c-e-h" },
+        { "key": "a-c-f-g" },
+        { "key": "a-c-f-h" },
+        { "key": "a-d-e-g" },
+        { "key": "a-d-e-h" },
+        { "key": "a-d-f-g" },
+        { "key": "a-d-f-h" },
+        { "key": "b-c-e-g" },
+        { "key": "b-c-e-h" },
+        { "key": "b-c-f-g" },
+        { "key": "b-c-f-h" },
+        { "key": "b-d-e-g" },
+        { "key": "b-d-e-h" },
+        { "key": "b-d-f-g" },
+        { "key": "b-d-f-h" }
+      ]
+    },
+    {
+      "name": "3-level with index variables",
+      "template": {
+        "Fn::Flatten": {
+          "Fn::Map": [
+            ["A", "B", "C"], ["item1", "idx1", "n1"], {
+              "Fn::Flatten": {
+                "Fn::Map": [
+                  ["X", "Y"], ["item2", "idx2", "n2"], {
+                    "Fn::Map": [
+                      [1, 2], ["item3", "idx3", "n3"], {
+                        "val1": "item1",
+                        "val2": "item2",
+                        "val3": "item3",
+                        "index1": "idx1",
+                        "index2": "idx2",
+                        "index3": "idx3",
+                        "size1": "n1",
+                        "size2": "n2",
+                        "size3": "n3"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "output": [
+        { "val1": "A", "val2": "X", "val3": "1", "index1": 0, "index2": 0, "index3": 0, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "A", "val2": "X", "val3": "2", "index1": 0, "index2": 0, "index3": 1, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "A", "val2": "Y", "val3": "1", "index1": 0, "index2": 1, "index3": 0, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "A", "val2": "Y", "val3": "2", "index1": 0, "index2": 1, "index3": 1, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "B", "val2": "X", "val3": "1", "index1": 1, "index2": 0, "index3": 0, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "B", "val2": "X", "val3": "2", "index1": 1, "index2": 0, "index3": 1, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "B", "val2": "Y", "val3": "1", "index1": 1, "index2": 1, "index3": 0, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "B", "val2": "Y", "val3": "2", "index1": 1, "index2": 1, "index3": 1, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "C", "val2": "X", "val3": "1", "index1": 2, "index2": 0, "index3": 0, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "C", "val2": "X", "val3": "2", "index1": 2, "index2": 0, "index3": 1, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "C", "val2": "Y", "val3": "1", "index1": 2, "index2": 1, "index3": 0, "size1": 3, "size2": 2, "size3": 2 },
+        { "val1": "C", "val2": "Y", "val3": "2", "index1": 2, "index2": 1, "index3": 1, "size1": 3, "size2": 2, "size3": 2 }
+      ]
+    }
+  ]
+}
