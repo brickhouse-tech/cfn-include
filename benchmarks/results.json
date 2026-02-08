@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-02-08T17:30:33.412Z",
+  "nodeVersion": "v22.22.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "results": [
+    {
+      "name": "Simple Template (baseline)",
+      "avgMs": 0.3806498000000005,
+      "minMs": 0.16483300000000156,
+      "maxMs": 0.9013330000000082,
+      "memoryDeltaBytes": 303936
+    },
+    {
+      "name": "Fn::Map (10 items)",
+      "avgMs": 1.638575000000003,
+      "minMs": 1.3373750000000086,
+      "maxMs": 2.4205829999999935,
+      "memoryDeltaBytes": -1775672
+    },
+    {
+      "name": "Fn::Map (100 items)",
+      "avgMs": 5.069958400000002,
+      "minMs": 3.0570830000000058,
+      "maxMs": 8.079707999999982,
+      "memoryDeltaBytes": -2419696
+    },
+    {
+      "name": "Fn::Map (1000 items)",
+      "avgMs": 27.24748359999999,
+      "minMs": 26.723874999999964,
+      "maxMs": 27.72358399999999,
+      "memoryDeltaBytes": 10498432
+    },
+    {
+      "name": "Nested Fn::Map (3-deep, 3x3x3=27 items)",
+      "avgMs": 3.4218917999999916,
+      "minMs": 3.188582999999994,
+      "maxMs": 3.721457999999984,
+      "memoryDeltaBytes": 4890592
+    },
+    {
+      "name": "Fn::Include chain (3-deep)",
+      "avgMs": 0.6251499999999964,
+      "minMs": 0.5039160000000038,
+      "maxMs": 0.8747920000000136,
+      "memoryDeltaBytes": -12606320
+    },
+    {
+      "name": "Fn::Include chain (10-deep)",
+      "avgMs": 1.8447082000000024,
+      "minMs": 1.7786250000000337,
+      "maxMs": 1.877666999999974,
+      "memoryDeltaBytes": 2607576
+    },
+    {
+      "name": "Glob (10 files)",
+      "avgMs": 0.053524799999991046,
+      "minMs": 0.04816699999997809,
+      "maxMs": 0.06749999999999545,
+      "memoryDeltaBytes": 45632
+    },
+    {
+      "name": "Glob (100 files)",
+      "avgMs": 0.05006659999999101,
+      "minMs": 0.04712499999999409,
+      "maxMs": 0.054250000000024556,
+      "memoryDeltaBytes": 45736
+    },
+    {
+      "name": "Complex template (mixed features)",
+      "avgMs": 0.920566800000006,
+      "minMs": 0.8366249999999695,
+      "maxMs": 1.0930000000000177,
+      "memoryDeltaBytes": 3539736
+    }
+  ]
+}

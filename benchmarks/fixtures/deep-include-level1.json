@@ -1,0 +1,5 @@
+{
+  "Level1": {
+    "Fn::Include": "file:///Users/nem/code/clawd/cfn-include/benchmarks/fixtures/deep-include-level2.json"
+  }
+}
