@@ -27,6 +27,23 @@ const { lowerCamelCase, upperCamelCase } = require('./lib/utils');
 const { isOurExplicitFunction } = require('./lib/schema');
 const { getAwsPseudoParameters, buildResourceArn } = require('./lib/internals');
 
+// File content cache to avoid re-reading the same files
+const fileCache = new Map();
+
+/**
+ * Read a file with caching to avoid redundant disk I/O
+ * @param {string} absolutePath - Absolute path to the file
+ * @returns {Promise<string>} File content as a string
+ */
+async function cachedReadFile(absolutePath) {
+  if (fileCache.has(absolutePath)) {
+    return fileCache.get(absolutePath);
+  }
+  const content = await readFile(absolutePath, 'utf8');
+  fileCache.set(absolutePath, content);
+  return content;
+}
+
 /**
  * @param  {object} options
  * @param  {object} [options.template] JSON|Yaml Object Document
@@ -734,7 +751,7 @@ async function fnInclude({ base, scope, cft, ...opts }) {
       const template = yaml.load(paths.map((_p) => `- Fn::Include: file://${_p}`).join('\n'));
       return recurse({ base, scope, cft: template, rootTemplate: template, ...opts });
     }
-    body = readFile(absolute).then(String).then(procTemplate);
+    body = cachedReadFile(absolute).then(procTemplate);
     absolute = `${location.protocol}://${absolute}`;
   } else if (location.protocol === 's3') {
     const basedir = pathParse(base.path).dir;
