@@ -1,38 +1,36 @@
 /**
  * Regression tests for cfn-include Phase 1 optimizations.
- * 
+ *
  * These tests ensure the Object.create() scope chain and other
  * optimizations don't break existing behavior.
- * 
+ *
  * Key areas tested:
  * - Nested Fn::Map scope inheritance (prototype chain)
  * - Scope variable shadowing
  * - Edge cases (empty arrays, nulls, booleans)
  * - Large dataset handling (performance regression)
- * 
+ *
  * Fn::Map semantics:
  * - When iterating arrays: _ (or placeholder) = value, index = array index
  * - When iterating objects: _ (or placeholder) = value, index = key name
  * - Use [placeholder, indexVar] format to access the key/index
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const fixturesDir = path.join(__dirname, '..', 'regression-fixtures');
 
 // Load fixtures
-const nested3Levels = JSON.parse(
-  fs.readFileSync(path.join(fixturesDir, 'nested-3-levels.json')),
-);
-const scopeCollision = JSON.parse(
-  fs.readFileSync(path.join(fixturesDir, 'scope-collision.json')),
-);
-const edgeCases = JSON.parse(
-  fs.readFileSync(path.join(fixturesDir, 'edge-cases.json')),
-);
+const nested3Levels = JSON.parse(fs.readFileSync(path.join(fixturesDir, 'nested-3-levels.json'), 'utf8'));
+const scopeCollision = JSON.parse(fs.readFileSync(path.join(fixturesDir, 'scope-collision.json'), 'utf8'));
+const edgeCases = JSON.parse(fs.readFileSync(path.join(fixturesDir, 'edge-cases.json'), 'utf8'));
 
-module.exports = {
+export default {
   'Scope Chain Regression': [
     {
       name: 'Nested 3-level Fn::Map with scope inheritance',
@@ -46,7 +44,7 @@ module.exports = {
     },
   ],
 
-  'Edge Cases': edgeCases.tests.map(test => ({
+  'Edge Cases': edgeCases.tests.map((test) => ({
     name: test.name,
     template: test.template,
     output: test.expected,
@@ -96,7 +94,7 @@ module.exports = {
       template: {
         'Fn::Map': [
           { x: 1, y: 2 },
-          ['val', 'key'],  // val = value, key = object key
+          ['val', 'key'], // val = value, key = object key
           {
             theKey: 'key',
             theValue: 'val',
@@ -121,12 +119,7 @@ module.exports = {
           ],
         },
       },
-      output: [
-        { item: 'a' },
-        { item: 'a' },
-        { item: 'b' },
-        { item: 'b' },
-      ],
+      output: [{ item: 'a' }, { item: 'a' }, { item: 'b' }, { item: 'b' }],
     },
   ],
 
@@ -135,10 +128,7 @@ module.exports = {
       name: 'Merge combines map results',
       template: {
         'Fn::Merge': {
-          'Fn::Map': [
-            ['a', 'b', 'c'],
-            { '_': true },
-          ],
+          'Fn::Map': [['a', 'b', 'c'], { _: true }],
         },
       },
       output: { a: true, b: true, c: true },
@@ -151,14 +141,10 @@ module.exports = {
       template: {
         'Fn::Map': [
           { alpha: 'A', beta: 'B', gamma: 'G' },
-          { value: '_' },  // _ = value from object
+          { value: '_' }, // _ = value from object
         ],
       },
-      output: [
-        { value: 'A' },
-        { value: 'B' },
-        { value: 'G' },
-      ],
+      output: [{ value: 'A' }, { value: 'B' }, { value: 'G' }],
     },
     {
       name: 'Map over object with key access via index placeholder',
@@ -183,18 +169,10 @@ module.exports = {
     {
       name: 'Map with 50 items completes',
       template: {
-        'Fn::Map': [
-          Array.from({ length: 50 }, (_, i) => `item-${i}`),
-          { id: '_', processed: true },
-        ],
+        'Fn::Map': [Array.from({ length: 50 }, (_, i) => `item-${i}`), { id: '_', processed: true }],
       },
       output: function (res) {
-        return (
-          Array.isArray(res) &&
-          res.length === 50 &&
-          res[0].id === 'item-0' &&
-          res[49].id === 'item-49'
-        );
+        return Array.isArray(res) && res.length === 50 && res[0].id === 'item-0' && res[49].id === 'item-49';
       },
     },
     {
@@ -206,21 +184,13 @@ module.exports = {
           {
             outer: 'outer',
             inner: {
-              'Fn::Map': [
-                Array.from({ length: 10 }, (_, i) => `inner-${i}`),
-                { inner: '_', parent: 'outer' },
-              ],
+              'Fn::Map': [Array.from({ length: 10 }, (_, i) => `inner-${i}`), { inner: '_', parent: 'outer' }],
             },
           },
         ],
       },
       output: function (res) {
-        return (
-          Array.isArray(res) &&
-          res.length === 10 &&
-          res[0].inner.length === 10 &&
-          res[0].inner[0].parent === 'outer-0'
-        );
+        return Array.isArray(res) && res.length === 10 && res[0].inner.length === 10 && res[0].inner[0].parent === 'outer-0';
       },
     },
   ],

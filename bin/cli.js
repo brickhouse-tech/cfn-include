@@ -1,23 +1,29 @@
 #!/usr/bin/env node
- 
-const exec = require('child_process').execSync;
-const path = require('path');
-const _ = require('lodash');
+
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
+import _ from 'lodash';
 // path.parse is native in Node.js - no need for path-parse package
 
-const include = require('../index');
-const yaml = require('../lib/yaml');
-const Client = require('../lib/cfnclient');
-const pkg = require('../package.json');
-const replaceEnv = require('../lib/replaceEnv');
+import include from '../index.js';
+import * as yaml from '../lib/yaml.js';
+import Client from '../lib/cfnclient.js';
+import replaceEnv from '../lib/replaceEnv.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Read package.json using fs instead of import assertion
+const pkg = JSON.parse(readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
 
 const { env } = process;
 
-(async () => {
-  const { default : yargs } = await import('yargs');
-  const { hideBin } = await import('yargs/helpers');
+const { default: yargs } = await import('yargs');
+const { hideBin } = await import('yargs/helpers');
 
-  const opts = yargs(hideBin(process.argv))
+const opts = yargs(hideBin(process.argv))
   .version(false)
   .command('$0 [path] [options]', pkg.description, (y) =>
     y.positional('path', {
@@ -60,9 +66,7 @@ const { env } = process;
       desc: 'bucket name required for templates larger than 50k',
     },
     context: {
-      desc:
-         
-        'template full path. only utilized for stdin when the template is piped to this script',
+      desc: 'template full path. only utilized for stdin when the template is piped to this script',
       required: false,
       string: true,
     },
@@ -79,13 +83,11 @@ const { env } = process;
     inject: {
       alias: 'i',
       string: true,
-       
       desc: `JSON string payload to use for template injection.`,
       coerce: (valStr) => JSON.parse(valStr),
     },
     doLog: {
       boolean: true,
-       
       desc: `console log out include options in recurse step`,
     },
     'ref-now-ignore-missing': {
@@ -111,7 +113,7 @@ const { env } = process;
 opts.enable = opts.enable.split(',');
 
 // Parse ref-now-ignores into an array
-const refNowIgnores = opts['ref-now-ignores'] ? opts['ref-now-ignores'].split(',').map(s => s.trim()) : [];
+const refNowIgnores = opts['ref-now-ignores'] ? opts['ref-now-ignores'].split(',').map((s) => s.trim()) : [];
 
 let promise;
 if (opts.path) {
@@ -142,9 +144,7 @@ if (opts.path) {
       process.exit(1);
     }
 
-    const location = opts.context
-      ? path.resolve(opts.context)
-      : path.join(process.cwd(), 'template.yml');
+    const location = opts.context ? path.resolve(opts.context) : path.join(process.cwd(), 'template.yml');
 
     template = opts.enable.includes('env') ? replaceEnv(template) : template;
 
@@ -166,13 +166,13 @@ promise
     if (opts.metadata) {
       let stdout;
       try {
-        stdout = exec('git log -n 1 --pretty=%H', {
+        stdout = execSync('git log -n 1 --pretty=%H', {
           stdio: [0, 'pipe', 'ignore'],
         })
           .toString()
           .trim();
       } catch {
-         
+        // ignore git errors
       }
       _.defaultsDeep(template, {
         Metadata: {
@@ -194,11 +194,7 @@ promise
     return template;
   })
   .then((template) => {
-    console.log(
-      opts.yaml
-        ? yaml.dump(template, opts)
-        : JSON.stringify(template, null, opts.minimize ? null : 2),
-    );
+    console.log(opts.yaml ? yaml.dump(template, opts) : JSON.stringify(template, null, opts.minimize ? null : 2));
   })
   .catch(function (err) {
     if (typeof err.toString === 'function') console.error(err.toString());
@@ -206,5 +202,3 @@ promise
     console.log(err.stack);
     process.exit(1);
   });
-
-})(); 

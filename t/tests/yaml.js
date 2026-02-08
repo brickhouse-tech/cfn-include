@@ -1,4 +1,4 @@
-const assert = require('assert');
+import assert from 'node:assert';
 
 const synopsis = {
   AWSTemplateFormatVersion: '2010-09-09',
@@ -23,7 +23,6 @@ const synopsis = {
                 '',
                 [
                   '#!/bin/bash\n',
-                   
                   '"/opt/aws/bin/cfn-init -s ${AWS::StackId} -r MyInstance --region ${AWS::Region}\n',
                   '',
                 ],
@@ -36,7 +35,7 @@ const synopsis = {
   },
 };
 
-module.exports = {
+export default {
   yaml: [
     {
       name: 'tags',
@@ -66,7 +65,7 @@ module.exports = {
       output: {
         Sub: {
           scalar: {
-            'Fn::Sub': '${Foobar}',  
+            'Fn::Sub': '${Foobar}',
           },
           sequence: {
             'Fn::Sub': ['foobar', { test: 123 }],

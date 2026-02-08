@@ -1,10 +1,14 @@
-const assert = require('assert');
-const fs = require('fs');
-const { posix } = require('path');
-const include = require('../index');
-const extendEnv = require('./tests/extendEnv');
+import assert from 'node:assert';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import include from '../index.js';
+import extendEnv from './tests/extendEnv.js';
 
-const yaml = require('../lib/yaml');
+import * as yaml from '../lib/yaml.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const tests = [
   'inject.json',
@@ -42,12 +46,14 @@ if (process.env.TEST_AWS) tests.push('s3.json');
 
 process.env.README = 'readme';
 
-tests.forEach(function (file) {
-  const testFile =
-    posix.extname(file) === '.js'
-      ?  
-      require(`./tests/${file}`)
-      : yaml.load(fs.readFileSync(`t/tests/${file}`));
+for (const file of tests) {
+  let testFile;
+  if (path.posix.extname(file) === '.js') {
+    const module = await import(`./tests/${file}`);
+    testFile = module.default;
+  } else {
+    testFile = yaml.load(fs.readFileSync(`t/tests/${file}`, 'utf8'));
+  }
 
   for (const category in testFile) {
 
@@ -58,11 +64,10 @@ tests.forEach(function (file) {
         delete process.env.AWS_ACCOUNT_NUM;
         delete process.env.AWS_ACCOUNT_ID;
       });
-      testFile[category].forEach(function (test) {
+      for (const test of testFile[category]) {
         const fn = test.only ? it.only : it;
         const opts = {
           template: test.template,
-           
           url: `file://${__dirname}/template.json`,
           doEnv: !!test.doEnv || false,
           doEval: !!test.doEval || false,
@@ -89,14 +94,14 @@ tests.forEach(function (file) {
               .catch(
                 test.catch
                   ? function (err) {
-                    assert.ok(test.catch(err) === true);
-                    done();
-                  }
+                      assert.ok(test.catch(err) === true);
+                      done();
+                    }
                   : done,
               );
           });
         });
-      });
+      }
     });
   }
-});
+}
