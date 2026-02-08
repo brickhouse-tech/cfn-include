@@ -385,56 +385,147 @@ Promise.resolve().then(fn);
 
 ---
 
-### 3. Object Cloning Patterns
+### 3. Object Cloning Patterns — THE PRIMARY BOTTLENECK
 
-**Current Problem Areas:**
+The `Fn::Map` handler has two distinct cloning operations that cause the 71x slowdown:
 
 ```javascript
 // In Fn::Map handler - called N times per map
-scope = _.clone(scope);
-const replaced = findAndReplace(scope, _.cloneDeep(body));
-
-// In fnInclude with inject
-cft.inject = await recurse({ ..., cft: cft.inject });
-const inject = await recurse({ ..., cft: cft.inject }); // cloned inject
+scope = _.clone(scope);                                    // Problem A: Scope cloning
+const replaced = findAndReplace(scope, _.cloneDeep(body)); // Problem B: Body cloning
 ```
 
-**Proposed Solutions:**
+These are **separate problems** requiring **separate solutions**:
 
-1. **Lazy Scope Cloning:**
+---
+
+#### Problem A: Scope Cloning (`_.clone(scope)`)
+
+**What's happening:** Every `Fn::Map` iteration clones the entire scope object to add one variable.
+
+**The math:** 1000-item map with 10 scope variables = 10,000 object property copies.
+
+**Solution: Lazy Scope via Prototype Chain**
+
+Instead of cloning, use JavaScript's native prototype chain for O(1) child scope creation:
+
 ```javascript
-// Instead of cloning scope for each iteration
-// Use a proxy or scoped object that references parent
-class ScopedContext {
-  constructor(parent, additions) {
+// Option 1: Native Object.create() - ZERO DEPENDENCIES
+function childScope(parent, additions) {
+  const child = Object.create(parent);
+  Object.assign(child, additions);
+  return child;
+}
+// Lookup automatically walks prototype chain
+
+// Option 2: Simple class (if you need iteration support)
+class ScopeChain {
+  constructor(parent = null) {
     this.parent = parent;
-    this.additions = additions;
+    this.vars = Object.create(null);
   }
-  get(key) {
-    return this.additions[key] ?? this.parent?.get(key);
+  get(key) { return key in this.vars ? this.vars[key] : this.parent?.get(key); }
+  set(key, val) { this.vars[key] = val; }
+  child(additions) {
+    const c = new ScopeChain(this);
+    Object.assign(c.vars, additions);
+    return c;
   }
 }
 ```
 
-2. **Template Body Caching:**
-```javascript
-// Cache the parsed body structure, only clone the variable parts
-const bodyStructure = analyzeBodyVariables(body);
-const replaced = substituteVariables(bodyStructure, scope);
-```
+**Existing Libraries:** None needed — `Object.create()` is native and optimal.
 
-3. **Structural Sharing:**
+**Impact:** O(1) instead of O(scope size) per iteration  
+**Effort:** Low (localized change)  
+**Risk:** Low — prototype chains are fundamental JS
+
+---
+
+#### Problem B: Body Cloning (`_.cloneDeep(body)`)
+
+**What's happening:** Every `Fn::Map` iteration deep-clones the entire body template before substitution.
+
+**The math:** 1000-item map with 500-node body = 500,000 object clones.
+
+**Solution Options:**
+
+**Option 1: Immer (Structural Sharing)**
+
+[Immer](https://immerjs.github.io/immer/) uses copy-on-write — unchanged parts share memory:
+
 ```javascript
-// Use immutable patterns to share unchanged parts
 import { produce } from 'immer';
+
+// Only nodes that actually change get cloned
 const replaced = produce(body, draft => {
-  substituteInPlace(draft, scope);
+  substituteVariablesInPlace(draft, scope);
 });
 ```
 
-**Estimated Impact:** 30-50%  
-**Effort:** High  
-**Risk:** Medium (changes core behavior)
+- **Pros:** Battle-tested, handles nested structures, used by Redux Toolkit
+- **Cons:** Adds ~15KB dependency, slight overhead for simple cases
+- **Best for:** Complex bodies where most nodes don't need substitution
+
+**Option 2: Variable Slot Analysis (Custom)**
+
+Analyze the body once to find which paths need substitution:
+
+```javascript
+// Run once per unique body structure
+const slots = analyzeVariableSlots(body);
+// Returns: [{ path: ['nested', 'key'], pattern: '${_}' }, ...]
+
+// Then for each iteration, only touch those paths
+const replaced = substituteSlots(body, slots, scope);
+```
+
+- **Pros:** Maximum performance, no dependency
+- **Cons:** More code to maintain, edge cases with dynamic structures
+- **Best for:** When body structure is static and predictable
+
+**Option 3: Lazy Cloning with Proxy**
+
+Clone nodes only when they're actually modified:
+
+```javascript
+function lazyClone(obj) {
+  let cloned = null;
+  return new Proxy(obj, {
+    set(target, prop, value) {
+      if (!cloned) cloned = Array.isArray(obj) ? [...obj] : { ...obj };
+      cloned[prop] = value;
+      return true;
+    },
+    get(target, prop) {
+      return cloned ? cloned[prop] : target[prop];
+    }
+  });
+}
+```
+
+- **Pros:** Zero upfront cost, clones only what changes
+- **Cons:** Proxy overhead on every access, complex for deep structures
+- **Best for:** Shallow bodies with few substitutions
+
+---
+
+#### RECOMMENDATION: Do Both, In Order
+
+1. **Phase 1a: Lazy Scope (Week 1)**
+   - Implement `Object.create()` based scope chain
+   - Drop-in replacement, low risk
+   - Expected gain: 10-20%
+
+2. **Phase 1b: Body Optimization (Week 2-3)**
+   - Start with **Immer** — it's proven and handles edge cases
+   - Benchmark against current
+   - If needed, optimize further with slot analysis
+   - Expected gain: 20-40%
+
+**Combined Impact:** 30-50%  
+**Total Effort:** Medium (phased approach reduces risk)  
+**Risk:** Low → Medium (Immer is safe; custom slot analysis needs thorough testing)
 
 ---
 
