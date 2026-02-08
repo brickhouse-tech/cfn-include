@@ -1,0 +1,81 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Complex benchmark template",
+  "Parameters": {
+    "Environment": {
+      "Type": "String",
+      "Default": "dev"
+    }
+  },
+  "Resources": {
+    "Fn::Merge": [
+      {
+        "Fn::Map": [
+          [
+            "web",
+            "api",
+            "worker"
+          ],
+          "service",
+          {
+            "${service}Bucket": {
+              "Type": "AWS::S3::Bucket",
+              "Properties": {
+                "BucketName": {
+                  "Fn::Sub": "${AWS::StackName}-${service}"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "Fn::Map": [
+          {
+            "Fn::Sequence": [
+              1,
+              5
+            ]
+          },
+          "idx",
+          {
+            "Lambda${idx}": {
+              "Type": "AWS::Lambda::Function",
+              "Properties": {
+                "FunctionName": {
+                  "Fn::Sub": "function-${idx}"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "Outputs": {
+    "Fn::Merge": [
+      {
+        "Fn::Map": [
+          [
+            "web",
+            "api",
+            "worker"
+          ],
+          "service",
+          {
+            "${service}Output": {
+              "Value": {
+                "Fn::Ref": "${service}Bucket"
+              },
+              "Export": {
+                "Name": {
+                  "Fn::Sub": "${AWS::StackName}-${service}"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
