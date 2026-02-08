@@ -36,6 +36,7 @@ const tests = [
   'subNow.yml',
   'refNow.js',
   'applyTags.yml',
+  'regression.js',
 ];
 if (process.env.TEST_AWS) tests.push('s3.json');
 

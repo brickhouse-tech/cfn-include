@@ -1,0 +1,37 @@
+{
+  "description": "Tests that inner scope variables shadow outer ones correctly",
+  "template": {
+    "Fn::Map": [
+      ["outer1", "outer2"],
+      "$",
+      {
+        "outer": "$",
+        "inner": {
+          "Fn::Map": [
+            ["inner1", "inner2"],
+            {
+              "currentItem": "_",
+              "outerRef": "$"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "expected": [
+    {
+      "outer": "outer1",
+      "inner": [
+        { "currentItem": "inner1", "outerRef": "outer1" },
+        { "currentItem": "inner2", "outerRef": "outer1" }
+      ]
+    },
+    {
+      "outer": "outer2",
+      "inner": [
+        { "currentItem": "inner1", "outerRef": "outer2" },
+        { "currentItem": "inner2", "outerRef": "outer2" }
+      ]
+    }
+  ]
+}
