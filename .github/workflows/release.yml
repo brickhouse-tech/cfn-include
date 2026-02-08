@@ -14,13 +14,16 @@ jobs:
     needs: [tests]
     steps:
       - uses: actions/checkout@v4
-        with: # important, must be defined on checkout to kick publish (defining in setup/node doesn't work)
+        with:
+          # important, must be defined on checkout to kick publish
           token: ${{ secrets.GH_TOKEN }}
-      - name: Use Node.js ${{ matrix.node-version }}
+          # Full history needed for conventional-changelog to detect breaking changes
+          fetch-depth: 0
+
+      - name: Use Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
-          # cache: "npm" # needs lockfile if enabled
 
       - name: tag release
         run: |
@@ -29,10 +32,28 @@ jobs:
             echo "Commit message starts with 'chore(release):', skipping release"
             exit 0
           fi
+
           git config --local user.email "creadbot@github.com"
           git config --local user.name "creadbot_github"
-          set -v
+
           npm install
-          npx commit-and-tag-version
+
+          # Check for breaking changes in commits since last tag
+          # Look for feat!:, fix!:, or BREAKING CHANGE in commit messages
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            RANGE="$LAST_TAG..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
+          # Check all commits (not just first-parent) for breaking changes
+          if git log $RANGE --format="%B" | grep -qE "(^[a-z]+!:|BREAKING CHANGE:)"; then
+            echo "Breaking change detected, forcing major version bump"
+            npx commit-and-tag-version --release-as major
+          else
+            npx commit-and-tag-version
+          fi
+
           git push
           git push --tags

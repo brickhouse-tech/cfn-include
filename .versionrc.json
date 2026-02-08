@@ -1,0 +1,13 @@
+{
+  "types": [
+    {"type": "feat", "section": "Features"},
+    {"type": "fix", "section": "Bug Fixes"},
+    {"type": "perf", "section": "Performance"},
+    {"type": "refactor", "section": "Refactor"},
+    {"type": "test", "section": "Tests"},
+    {"type": "docs", "section": "Documentation"},
+    {"type": "chore", "hidden": true}
+  ],
+  "commitUrlFormat": "https://github.com/brickhouse-tech/cfn-include/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/brickhouse-tech/cfn-include/compare/{{previousTag}}...{{currentTag}}"
+}
