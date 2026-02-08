@@ -1,6 +1,5 @@
 const url = require('url');
 const path = require('path');
-const { readFile } = require('fs/promises');
 const _ = require('lodash');
 const { glob } = require('glob');
 const Promise = require('bluebird');
@@ -27,23 +26,7 @@ const { lowerCamelCase, upperCamelCase } = require('./lib/utils');
 const { isOurExplicitFunction } = require('./lib/schema');
 const { getAwsPseudoParameters, buildResourceArn } = require('./lib/internals');
 const { createChildScope } = require('./lib/scope');
-
-// File content cache to avoid re-reading the same files
-const fileCache = new Map();
-
-/**
- * Read a file with caching to avoid redundant disk I/O
- * @param {string} absolutePath - Absolute path to the file
- * @returns {Promise<string>} File content as a string
- */
-async function cachedReadFile(absolutePath) {
-  if (fileCache.has(absolutePath)) {
-    return fileCache.get(absolutePath);
-  }
-  const content = await readFile(absolutePath, 'utf8');
-  fileCache.set(absolutePath, content);
-  return content;
-}
+const { cachedReadFile } = require('./lib/cache');
 
 /**
  * @param  {object} options
@@ -78,7 +61,7 @@ module.exports = async function (options) {
   const base = parseLocation(options.url);
   const scope = options.scope || {};
   if (base.relative) throw new Error('url cannot be relative');
-  template = template === undefined
+  template = !template
     ? fnInclude({ base, scope, cft: options.url, ...options })
     : template;
   // Resolve template if it's a promise to extract the root template for reference lookups
