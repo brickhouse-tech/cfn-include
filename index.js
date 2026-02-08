@@ -127,8 +127,9 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
   if (opts.doLog) {
     console.log({ base, scope, cft, rootTemplate, caller, ...opts });
   }
-  // Use Object.create() for O(1) child scope creation instead of O(n) clone
-  scope = createChildScope(scope);
+  // NOTE: We don't clone/create child scope here anymore.
+  // With prototype-chain scopes, Fn::Map creates children only when adding variables.
+  // This avoids unnecessary intermediate scopes that break prototype lookups.
   if (Array.isArray(cft)) {
     return Promise.all(cft.map((o) => recurse({ base, scope, cft: o, rootTemplate, caller: 'recurse:isArray', ...opts })));
   }
