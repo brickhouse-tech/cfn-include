@@ -61,34 +61,95 @@ All notable changes to this project will be documented in this file. See [commit
 
 * add regression test suite for Phase 1 optimizations ([def9fd2](https://github.com/brickhouse-tech/cfn-include/commit/def9fd2))
 
-## 2.1.19 (2026-02-08)
+## [2.1.19](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.18...v2.1.19) (2026-02-08)
 
-## 2.1.18 (2026-02-04)
+### Bug Fixes
 
-## 2.1.17 (2026-02-04)
+* lint errors in benchmark-runner.js (trailing commas) ([8257735](https://github.com/brickhouse-tech/cfn-include/commit/8257735))
 
-## 2.1.16 (2026-01-30)
+### Documentation
 
-## 2.1.15 (2026-01-30)
+* clarify scope vs body cloning optimization strategy ([4c3ddc1](https://github.com/brickhouse-tech/cfn-include/commit/4c3ddc1))
+* add Phase 3 TypeScript Analysis ([3758d4d](https://github.com/brickhouse-tech/cfn-include/commit/3758d4d))
+* add Phase 4 CDK Integration Analysis ([38a7090](https://github.com/brickhouse-tech/cfn-include/commit/38a7090))
 
-## 2.1.14 (2026-01-27)
+### Features
 
-## 2.1.13 (2026-01-22)
+* **benchmarks:** add Phase 1 performance analysis and benchmark suite ([7bb7670](https://github.com/brickhouse-tech/cfn-include/commit/7bb7670))
 
-## 2.1.12 (2026-01-22)
+## [2.1.18](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.17...v2.1.18) (2026-02-04)
 
-## 2.1.11 (2026-01-22)
+*No notable changes*
 
-## 2.1.10 (2026-01-22)
+## [2.1.17](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.16...v2.1.17) (2026-02-04)
 
-## 2.1.9 (2026-01-17)
+### Bug Fixes
 
-## 2.1.8 (2025-12-24)
+* **deps:** bump @isaacs/brace-expansion from 5.0.0 to 5.0.1 ([92f242e](https://github.com/brickhouse-tech/cfn-include/commit/92f242e))
+* **deps:** bump the all group with 2 updates ([c10adc7](https://github.com/brickhouse-tech/cfn-include/commit/c10adc7))
 
-## 2.1.7 (2025-12-12)
+## [2.1.16](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.15...v2.1.16) (2026-01-30)
 
-## 2.1.6 (2025-11-21)
+### Security
 
+* CVE fast-xml-parse 5.3.4 override ([ca5c7cc](https://github.com/brickhouse-tech/cfn-include/commit/ca5c7cc))
+
+## [2.1.15](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.14...v2.1.15) (2026-01-30)
+
+### Bug Fixes
+
+* **deps:** bump the all group with 3 updates ([f0c5bd2](https://github.com/brickhouse-tech/cfn-include/commit/f0c5bd2))
+
+## [2.1.14](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.13...v2.1.14) (2026-01-27)
+
+### Bug Fixes
+
+* **deps:** bump @znemz/cft-utils from 0.1.30 to 0.1.31 in the all group ([06669aa](https://github.com/brickhouse-tech/cfn-include/commit/06669aa))
+
+## [2.1.13](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.12...v2.1.13) (2026-01-22)
+
+### Bug Fixes
+
+* Fn::RefNow bug fixes ([f42119e](https://github.com/brickhouse-tech/cfn-include/commit/f42119e))
+
+## [2.1.12](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.11...v2.1.12) (2026-01-22)
+
+### Features
+
+* RefNow LogicalId support ([2a01d82](https://github.com/brickhouse-tech/cfn-include/commit/2a01d82))
+
+## [2.1.11](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.10...v2.1.11) (2026-01-22)
+
+### Features
+
+* refNowIgnoreMissing and refNowIgnores for cli for passthrough ([cfd4740](https://github.com/brickhouse-tech/cfn-include/commit/cfd4740))
+
+## [2.1.10](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.9...v2.1.10) (2026-01-22)
+
+### Bug Fixes
+
+* **deps:** bump lodash from 4.17.21 to 4.17.23 ([f45ef98](https://github.com/brickhouse-tech/cfn-include/commit/f45ef98))
+
+## [2.1.9](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.8...v2.1.9) (2026-01-17)
+
+### Features
+
+* Fn::RefNow ([81e6867](https://github.com/brickhouse-tech/cfn-include/commit/81e6867))
+* Fn::SubNow ([45a1cbc](https://github.com/brickhouse-tech/cfn-include/commit/45a1cbc))
+
+## [2.1.8](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.7...v2.1.8) (2025-12-24)
+
+### Chore
+
+* npm publish OIDC ([bef7a21](https://github.com/brickhouse-tech/cfn-include/commit/bef7a21))
+
+## [2.1.7](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.6...v2.1.7) (2025-12-12)
+
+### Bug Fixes
+
+* **deps:** bump the all group across 1 directory with 2 updates ([4d2266e](https://github.com/brickhouse-tech/cfn-include/commit/4d2266e))
+
+## [2.1.6](https://github.com/brickhouse-tech/cfn-include/compare/v2.1.5...v2.1.6) (2025-11-21)
 
 ### Bug Fixes
 
@@ -104,8 +165,7 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## 2.1.1 (2025-02-26)
 
-## 2.1.0 (2025-01-21)
-
+## [2.1.0](https://github.com/brickhouse-tech/cfn-include/compare/v2.0.2...v2.1.0) (2025-01-21)
 
 ### Features
 
@@ -115,7 +175,6 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## [2.0.1](https://github.com/nmccready/cfn-include/compare/v2.0.0...v2.0.1) (2024-11-14)
 
-
 ### Bug Fixes
 
 * dependency bump CVE serve ([eed7ac5](https://github.com/nmccready/cfn-include/commit/eed7ac5de3dbb5a0607d8966d1c220857b8cc636))
@@ -123,7 +182,6 @@ All notable changes to this project will be documented in this file. See [commit
 * scoped to @znemz/cfn-include to publish 2.0.0 ([492e479](https://github.com/nmccready/cfn-include/commit/492e479a8fa8c1e15a33ce3a7962a7cca5affb94))
 
 ## [2.0.0](https://github.com/monken/cfn-include/compare/v1.4.1...v2.0.0) (2024-08-24)
-
 
 ### ⚠ BREAKING CHANGES
 
@@ -134,7 +192,6 @@ All notable changes to this project will be documented in this file. See [commit
 * capital one features and more Fn::* ([3265793](https://github.com/monken/cfn-include/commit/32657939f9ac772e132ba73df7e8fa04b2e33000))
 * cli added --context to allow stdin to work with includes ([ee33ba9](https://github.com/monken/cfn-include/commit/ee33ba95bee24ce04b262001f05951947621b27d))
 * cli added --context to allow stdin to work with includes ([7f6986f](https://github.com/monken/cfn-include/commit/7f6986fb34dad85c700ecccd70ec2f49895b2523))
-
 
 ### Bug Fixes
 
