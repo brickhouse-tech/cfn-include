@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   refNow: [
     {
       name: 'Fn::RefNow resolves injected variable',

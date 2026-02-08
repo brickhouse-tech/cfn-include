@@ -1,16 +1,23 @@
-const assert = require('assert');
-const exec = require('child_process').execFile;
+import assert from 'node:assert';
+import { execFile } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const extendEnv = require('./tests/extendEnv');
+import extendEnv from './tests/extendEnv.js';
 
-['cli'].forEach(function (file) {
-   
-  const tests = require(`./tests/${file}.json`);
-   
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const files = ['cli'];
+
+for (const file of files) {
+  const tests = JSON.parse(readFileSync(path.join(__dirname, `tests/${file}.json`), 'utf8'));
+
   for (const category in tests) {
 
     describe(category, function () {
-      tests[category].forEach(function (test) {
+      for (const test of tests[category]) {
         const fn = test.only ? it.only : it;
         fn(test.name || 'include', function (done) {
           let cliArgs = test.template ? ['bin/cli.js', test.template] : ['bin/cli.js'];
@@ -19,7 +26,7 @@ const extendEnv = require('./tests/extendEnv');
           }
           extendEnv(test.env, () => {
             // console.log({ cliArgs });
-            const proc = exec('node', cliArgs, function (err, out, stderr) {
+            const proc = execFile('node', cliArgs, function (err, out, stderr) {
               // console.log({ out });
               if (test.exitCode) {
                 assert.ok(stderr.match(new RegExp(test.errorMessage)), 'stderr match');
@@ -39,7 +46,7 @@ const extendEnv = require('./tests/extendEnv');
             }
           });
         });
-      });
+      }
     });
   }
-});
+}

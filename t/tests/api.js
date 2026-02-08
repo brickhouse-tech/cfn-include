@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   api: [
     {
       name: 'basic API call',

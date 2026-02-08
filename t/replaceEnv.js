@@ -1,8 +1,8 @@
-const assert = require('assert');
-const replaceEnv = require('../lib/replaceEnv');
+import assert from 'node:assert';
+import replaceEnv from '../lib/replaceEnv.js';
 
-describe(replaceEnv.name, function() {
-  it('should replace some defined vars', function() {
+describe(replaceEnv.name, function () {
+  it('should replace some defined vars', function () {
     const template = replaceEnv(
       `
       Fn:DeepMerge:

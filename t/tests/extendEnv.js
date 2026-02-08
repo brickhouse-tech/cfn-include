@@ -1,4 +1,4 @@
-const { omit } = require('lodash');
+import _ from 'lodash';
 
 const extendEnv = (env, cb) => {
   if (env) {
@@ -6,8 +6,8 @@ const extendEnv = (env, cb) => {
   }
   cb();
   if (env) {
-    omit(process.env, Object.keys(env));
+    _.omit(process.env, Object.keys(env));
   }
 };
 
-module.exports = extendEnv;
+export default extendEnv;

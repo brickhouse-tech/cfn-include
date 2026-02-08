@@ -1,32 +1,32 @@
-const url = require('url');
-const path = require('path');
-const _ = require('lodash');
-const { glob } = require('glob');
-const sortObject = require('@znemz/sort-object');
-const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
-const { addProxyToClient } = require('aws-sdk-v3-proxy');
+import url from 'node:url';
+import path from 'node:path';
+import _ from 'lodash';
+import { glob } from 'glob';
+import sortObject from '@znemz/sort-object';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { addProxyToClient } from 'aws-sdk-v3-proxy';
 
 // path.parse is native in Node.js - no need for path-parse package
-const deepMerge = require('deepmerge');
-const { isTaggableResource } = require('@znemz/cft-utils/src/resources/taggable');
+import deepMerge from 'deepmerge';
+import { isTaggableResource } from '@znemz/cft-utils/src/resources/taggable.js';
 
-const request = require('./lib/request');
-const PromiseExt = require('./lib/promise');
+import request from './lib/request.js';
+import * as PromiseExt from './lib/promise.js';
 
 const S3 = (opts = {}) => addProxyToClient(new S3Client(opts), { throwOnNoProxy: false });
 
 const s3 = S3();
-const yaml = require('./lib/yaml');
-const { getParser } = require('./lib/include/query');
-const parseLocation = require('./lib/parselocation');
-const replaceEnv = require('./lib/replaceEnv');
+import * as yaml from './lib/yaml.js';
+import { getParser } from './lib/include/query.js';
+import parseLocation from './lib/parselocation.js';
+import replaceEnv from './lib/replaceEnv.js';
 
-const { lowerCamelCase, upperCamelCase } = require('./lib/utils');
-const { isOurExplicitFunction } = require('./lib/schema');
-const { getAwsPseudoParameters, buildResourceArn } = require('./lib/internals');
-const { cachedReadFile } = require('./lib/cache');
-const { createChildScope } = require('./lib/scope');
-const { promiseProps } = require('./lib/promise-utils');
+import { lowerCamelCase, upperCamelCase } from './lib/utils.js';
+import { isOurExplicitFunction } from './lib/schema.js';
+import { getAwsPseudoParameters, buildResourceArn } from './lib/internals.js';
+import { cachedReadFile } from './lib/cache.js';
+import { createChildScope } from './lib/scope.js';
+import { promiseProps } from './lib/promise-utils.js';
 
 /**
  * @param  {object} options
@@ -53,7 +53,7 @@ const { promiseProps } = require('./lib/promise-utils');
  *     doEval: opts.doEval, -- allow Fn::Eval to be used
  *   })
  */
-module.exports = async function (options) {
+export default async function (options) {
   let { template } = options;
   options.doEnv = getBoolEnvOpt(options.doEnv, 'CFN_INCLUDE_DO_ENV');
   options.doEval = getBoolEnvOpt(options.doEval, 'CFN_INCLUDE_DO_EVAL');
@@ -72,7 +72,7 @@ module.exports = async function (options) {
     rootTemplate: resolvedTemplate,
     ...options,
   });
-};
+}
 
 /**
  * @param  {object} base file options
@@ -310,9 +310,9 @@ async function recurse({ base, scope, cft, rootTemplate, caller, ...opts }) {
           delete cft['Fn::DeepMerge'];
           let mergedObj = {};
           if (json && json.length) {
-            json.forEach((j) => {
+            for (const j of json) {
               mergedObj = deepMerge(mergedObj, j);
-            });
+            }
           }
           return recurse({ base, scope, cft: _.defaults(cft, mergedObj), rootTemplate, caller: 'Fn::DeepMerge', ...opts });
         },
@@ -616,15 +616,15 @@ function findAndReplace(scope, object) {
     }
   }
   if (Array.isArray(object)) {
-    object = object.map(_.bind(findAndReplace, this, scope));
+    object = object.map((item) => findAndReplace(scope, item));
   } else if (_.isPlainObject(object)) {
     object = _.mapKeys(object, function (value, key) {
       return findAndReplace(scope, key);
     });
-    Object.keys(object).forEach(function (key) {
-      if (key === 'Fn::Map') return;
+    for (const key of Object.keys(object)) {
+      if (key === 'Fn::Map') continue;
       object[key] = findAndReplace(scope, object[key]);
-    });
+    }
   }
   return object;
 }
@@ -883,13 +883,14 @@ async function handleIncludeBody({ scope, args, body, absolute }) {
 function JSONifyString(string) {
   const lines = [];
   const split = string.toString().split(/(\r?\n)/);
-  split.forEach(function (line, idx) {
+  for (let idx = 0; idx < split.length; idx++) {
+    const line = split[idx];
     if (idx % 2) {
       lines[(idx - 1) / 2] = lines[(idx - 1) / 2] + line;
     } else {
       lines.push(line);
     }
-  });
+  }
   return lines;
 }
 
