@@ -89,7 +89,7 @@ Options:
 * `--prefix`         prefix for templates uploaded to the bucket ['cfn-include']
 * `--version`        print version and exit
 * `--context`        template full path. only utilized for stdin when the template is piped to this script
-  example:          `cat examples/base.template | ./bin/cli.js --context examples/base.template`
+  example:          `cat examples/base.template | cfn-include --context examples/base.template`
 * `--enable`         different options / toggles: ['env','eval']    [string] [choices: 'env','eval','env.eval' etc...]
   * `env` pre-process env vars and inject into templates as they are processed looks for $KEY or ${KEY} matches
 * `-i, --inject`     JSON string payload to use for template injection. (Takes precedence over process.env (if enabled) injection and will be merged on top of process.env)
@@ -820,7 +820,7 @@ Results in:
 
 ## Fn::Sort
 
-`$ ./bin/cli.js [examples/sort.yaml](examples/sort.yaml)`
+`$ cfn-include [examples/sort.yaml](examples/sort.yaml)`
 
 ```json
 [
@@ -839,7 +839,7 @@ Results in:
 
 ## Fn::SortedUniq
 
-`$ ./bin/cli.js [examples/sortedUniq.yaml](examples/sortedUniq.yaml)`
+`$ cfn-include [examples/sortedUniq.yaml](examples/sortedUniq.yaml)`
 
 ```json
 [
@@ -856,7 +856,7 @@ Results in:
 
 ## Fn::SortBy
 
-`$ ./bin/cli.js [examples/sortBy.yaml](examples/sortBy.yaml)`
+`$ cfn-include [examples/sortBy.yaml](examples/sortBy.yaml)`
 
 ```json
 [
@@ -899,7 +899,7 @@ Results in:
 
 See: [examples/sortObject.yaml](examples/sortObject.yaml)
 
-`$ ./bin/cli.js examples/sortObject.yaml`
+`$ cfn-include examples/sortObject.yaml`
 
 ```json
 {
