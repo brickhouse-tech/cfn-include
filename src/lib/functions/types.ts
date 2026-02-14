@@ -1,5 +1,7 @@
 import type { ParsedLocation, Scope, TemplateValue, TemplateDocument, TemplateObject } from '../../types/index.js';
 
+export const MAX_RECURSE_DEPTH = 100;
+
 export interface RecurseContext {
   base: ParsedLocation;
   scope: Scope;
@@ -7,6 +9,7 @@ export interface RecurseContext {
   rootTemplate?: TemplateDocument;
   caller?: string;
   key?: string;
+  depth?: number;
   doEnv?: boolean;
   doEval?: boolean;
   doLog?: boolean;

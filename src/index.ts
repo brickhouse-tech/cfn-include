@@ -7,6 +7,7 @@ import { promiseProps } from './lib/promise-utils.js';
 import { buildRegistry } from './lib/functions/registry.js';
 import { getBoolEnvOpt } from './lib/functions/helpers.js';
 import type { RecurseContext } from './lib/functions/types.js';
+import { MAX_RECURSE_DEPTH } from './lib/functions/types.js';
 
 import type {
   IncludeOptions as TypeIncludeOptions,
@@ -37,8 +38,12 @@ interface MainIncludeOptions {
 let registry: ReturnType<typeof buildRegistry>;
 
 async function recurse(ctx: RecurseContext): Promise<any> {
-  const { base, cft, rootTemplate, caller, ...opts } = ctx;
+  const { base, cft, rootTemplate, caller, depth = 0, ...opts } = ctx;
   let { scope } = ctx;
+
+  if (depth > MAX_RECURSE_DEPTH) {
+    throw new Error(`Maximum recursion depth (${MAX_RECURSE_DEPTH}) exceeded at caller: ${caller}`);
+  }
 
   if (opts.doLog) {
     console.log({ base, scope, cft, rootTemplate, caller, ...opts });
@@ -46,9 +51,11 @@ async function recurse(ctx: RecurseContext): Promise<any> {
 
   scope = createChildScope(scope);
 
+  const nextDepth = depth + 1;
+
   if (Array.isArray(cft)) {
     return Promise.all(
-      cft.map((o) => recurse({ base, scope, cft: o, rootTemplate, caller: 'recurse:isArray', ...opts })),
+      cft.map((o) => recurse({ base, scope, cft: o, rootTemplate, caller: 'recurse:isArray', depth: nextDepth, ...opts })),
     );
   }
 
@@ -59,14 +66,14 @@ async function recurse(ctx: RecurseContext): Promise<any> {
     for (const fnName of Object.keys(obj)) {
       const handler = registry.handlers[fnName];
       if (handler) {
-        return handler(ctx);
+        return handler({ ...ctx, scope, depth: nextDepth });
       }
     }
 
     // Process remaining properties (no Fn:: match)
     return promiseProps(
       _.mapValues(obj, (template, key) =>
-        recurse({ base, scope, cft: template, key, rootTemplate, caller: 'recurse:isPlainObject:end', ...opts }),
+        recurse({ base, scope, cft: template, key, rootTemplate, caller: 'recurse:isPlainObject:end', depth: nextDepth, ...opts }),
       ),
     );
   }
