@@ -49,9 +49,11 @@
     "prepare": "sort-package-json",
     "prepublishOnly": "npm run build:clean",
     "serve": "serve ./t/fixtures -l 9999",
-    "test": "npm run build && npm run test:this",
-    "test:run": "sleep 1 && mocha --timeout 20000 --bail t/include.js t/cli.js t/replaceEnv.js",
-    "test:this": "run-p -r serve test:run",
+    "test": "npm run build && run-p -r serve test:run",
+    "test:run": "sleep 1 && vitest run",
+    "test:watch": "npm run build && run-p -r serve vitest",
+    "test:coverage": "npm run build && run-p -r serve test:coverage:run",
+    "test:coverage:run": "sleep 1 && vitest run --coverage",
     "typecheck": "tsc --noEmit"
   },
   "overrides": {
@@ -74,21 +76,22 @@
   "devDependencies": {
     "@commitlint/cli": "^20",
     "@commitlint/config-conventional": "^20",
+    "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.17.23",
     "@types/node": "^25.2.2",
+    "@vitest/coverage-v8": "^4.0.18",
     "better-npm-audit": "3.11.0",
     "commit-and-tag-version": "12",
     "commitlint": "20",
     "eslint": "9",
     "eslint-config-prettier": "10",
-    "eslint-plugin-mocha": "11",
     "eslint-plugin-prettier": "5",
-    "mocha": "11.7.5",
     "npm-run-all": "4.1.5",
     "prettier": "3",
     "serve": "14.2.5",
     "sort-package-json": "3.6.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">=20.19"
