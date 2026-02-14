@@ -13,8 +13,8 @@ import { performance } from 'node:perf_hooks';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import include from '../index.js';
-import * as yaml from '../lib/yaml.js';
+import include from '../dist/index.js';
+import * as yaml from '../dist/lib/yaml.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
