@@ -19,7 +19,7 @@ const cliTests = loadCliTestFile('cli.json');
  * Run a CLI test case.
  */
 async function runCliTest(test: CliTestCase): Promise<void> {
-  const cliPath = path.join(PROJECT_ROOT, 'bin', 'cli.js');
+  const cliPath = path.join(PROJECT_ROOT, 'dist', 'cli.js');
   let args = test.template ? [cliPath, test.template] : [cliPath];
 
   if (test.args) {
