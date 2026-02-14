@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.1.2](https://github.com/brickhouse-tech/cfn-include/compare/v4.1.1...v4.1.2) (2026-02-14)
+
+
+### Bug Fixes
+
+* **deps:** add globals and @eslint/js for eslint 10 ([3d6a39a](https://github.com/brickhouse-tech/cfn-include/commit/3d6a39a814827de1f751f9bcb3954d76b9052ed9))
+* **deps:** bump the all group across 1 directory with 7 updates ([ddd66b6](https://github.com/brickhouse-tech/cfn-include/commit/ddd66b676be60bf5e53a4431e03855e462351e26))
+
 ## [4.1.1](https://github.com/brickhouse-tech/cfn-include/compare/v4.1.0...v4.1.1) (2026-02-14)
 
 ## [4.1.0](https://github.com/brickhouse-tech/cfn-include/compare/v4.0.1...v4.1.0) (2026-02-14)
