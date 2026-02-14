@@ -1,6 +1,6 @@
 {
   "name": "@znemz/cfn-include",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "description": "Preprocessor for CloudFormation templates with support for loops and flexible include statements",
   "keywords": [
     "aws",
@@ -50,10 +50,10 @@
     "prepublishOnly": "npm run build:clean",
     "serve": "serve ./t/fixtures -l 9999",
     "test": "npm run build && run-p -r serve test:run",
-    "test:run": "sleep 1 && vitest run",
-    "test:watch": "npm run build && run-p -r serve vitest",
     "test:coverage": "npm run build && run-p -r serve test:coverage:run",
     "test:coverage:run": "sleep 1 && vitest run --coverage",
+    "test:run": "sleep 1 && vitest run",
+    "test:watch": "npm run build && run-p -r serve vitest",
     "typecheck": "tsc --noEmit"
   },
   "overrides": {

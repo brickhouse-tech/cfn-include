@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.1.0](https://github.com/brickhouse-tech/cfn-include/compare/v4.0.1...v4.1.0) (2026-02-14)
+
+
+### Features
+
+* migrate tests from Mocha to Vitest + TypeScript (Phase 3b) ([47ccd3d](https://github.com/brickhouse-tech/cfn-include/commit/47ccd3d385a24e7689e5971bcb711950e39bc645))
+
 ## [4.0.1](https://github.com/brickhouse-tech/cfn-include/compare/v4.0.0...v4.0.1) (2026-02-12)
 
 
