@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.1.4](https://github.com/brickhouse-tech/cfn-include/compare/v4.1.3...v4.1.4) (2026-02-15)
+
+
+### Refactor
+
+* add recursion depth tracking and limit (MAX_RECURSE_DEPTH=100) ([05fba95](https://github.com/brickhouse-tech/cfn-include/commit/05fba95f2b50e4251d97d2bfbc15a1bed9a168e2))
+* extract all Fn:: handlers into modular files under src/lib/functions/ ([b70eccb](https://github.com/brickhouse-tech/cfn-include/commit/b70eccb22bffeb49492d05f6cd177d21a61b39ba))
+
 ## [4.1.3](https://github.com/brickhouse-tech/cfn-include/compare/v4.1.2...v4.1.3) (2026-02-15)
 
 ## [4.1.2](https://github.com/brickhouse-tech/cfn-include/compare/v4.1.1...v4.1.2) (2026-02-14)
