@@ -5,6 +5,8 @@
  * - 500 resources per stack
  * - 200 outputs per stack
  * - 1MB (1,048,576 bytes) template body size
+ *
+ * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html
  */
 
 export interface TemplateStats {
@@ -27,12 +29,20 @@ export interface StatsWarning {
   percent: number;
 }
 
+/**
+ * CloudFormation service quotas.
+ * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html
+ */
 const CFN_LIMITS = {
+  /** @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html - "Resources" */
   resources: 500,
+  /** @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html - "Outputs" */
   outputs: 200,
+  /** @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html - "Template body size" */
   templateBytes: 1_048_576, // 1MB
 } as const;
 
+/** Warn when usage reaches this fraction of the CloudFormation limit. */
 const WARNING_THRESHOLD = 0.8; // 80%
 
 /**
