@@ -10,6 +10,7 @@ import include from './index.js';
 import * as yaml from './lib/yaml.js';
 import Client from './lib/cfnclient.js';
 import replaceEnv from './lib/replaceEnv.js';
+import { computeStats, checkThresholds, formatStatsReport } from './lib/stats.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +33,7 @@ interface CliOptions {
   enable: string;
   inject?: Record<string, string>;
   doLog?: boolean;
+  stats: boolean;
   'ref-now-ignore-missing'?: boolean;
   'ref-now-ignores'?: string;
 }
@@ -105,6 +107,11 @@ const opts = yargs(hideBin(process.argv))
     doLog: {
       boolean: true,
       desc: `console log out include options in recurse step`,
+    },
+    stats: {
+      desc: 'report template statistics and CloudFormation limit warnings to stderr',
+      default: false,
+      boolean: true,
     },
     'ref-now-ignore-missing': {
       boolean: true,
@@ -210,6 +217,22 @@ promise
     return template;
   })
   .then((template: any) => {
+    // Template stats and warnings
+    if (opts.stats) {
+      const serialized = JSON.stringify(template);
+      const stats = computeStats(template, serialized);
+      console.error(formatStatsReport(stats));
+      const warnings = checkThresholds(stats);
+      if (warnings.length > 0) {
+        console.error('');
+        console.error('⚠️  Warnings:');
+        for (const w of warnings) {
+          console.error(`  - ${w.message}`);
+        }
+      }
+      console.error('');
+    }
+
     console.log(opts.yaml ? yaml.dump(template, { lineWidth: opts.lineWidth }) : JSON.stringify(template, null, opts.minimize ? null : 2));
   })
   .catch(function (err: any) {

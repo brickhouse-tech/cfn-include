@@ -96,6 +96,7 @@ Options:
 * `--doLog`          console log out include options in recurse step. Shows caller parameter to aid debugging nested function calls.
 * `--ref-now-ignore-missing`    do not fail if `Fn::RefNow` reference cannot be resolved; instead return in standard CloudFormation `Ref` syntax
 * `--ref-now-ignores <names>`   comma-separated list of reference names to ignore if not found (e.g., `OptionalRef1,OptionalRef2`)
+* `--stats`           report template statistics and CloudFormation limit warnings to stderr. Includes resource count, output count, template size (with % of CloudFormation limits), and a breakdown of resource types. Warnings are emitted when any metric reaches 80% of its limit. Output goes to stderr so it does not interfere with template output on stdout.
 `cfn-include` also accepts a template passed from stdin
 
 ```
