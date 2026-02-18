@@ -57,7 +57,7 @@
     "typecheck": "tsc --noEmit"
   },
   "overrides": {
-    "fast-xml-parser": "5.3.4"
+    "fast-xml-parser": "5.3.6"
   },
   "dependencies": {
     "@aws-sdk/client-cloudformation": "^3.637.0",
