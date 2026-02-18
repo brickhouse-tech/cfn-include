@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.2.0](https://github.com/brickhouse-tech/cfn-include/compare/v4.1.8...v4.2.0) (2026-02-18)
+
+
+### Features
+
+* add template stats and oversized template warnings (Phase 1 of [#90](https://github.com/brickhouse-tech/cfn-include/issues/90)) ([9ec2a97](https://github.com/brickhouse-tech/cfn-include/commit/9ec2a9775a37fb3d4d5d767d902d2ee330181da3))
+
+
+### Refactor
+
+* export CFN limits as true constants, use in tests ([95dbb8b](https://github.com/brickhouse-tech/cfn-include/commit/95dbb8b6a86c3b87498dde187e92739bc6acf635))
+
+
+### Documentation
+
+* add AWS CloudFormation limits doc references to stats constants ([03e0a76](https://github.com/brickhouse-tech/cfn-include/commit/03e0a764005c8bf8189cc91f6e66fd9873e329ea))
+* add Phase 5 template stats doc, move completed phases to docs/completed/ ([141d950](https://github.com/brickhouse-tech/cfn-include/commit/141d950c2d88e5d4f4d3b3630276f57bc02e6223))
+* renumber phases — stats is Phase 4, CDK is Phase 5 ([957f370](https://github.com/brickhouse-tech/cfn-include/commit/957f3706d5c7797b12916754c73fb16d6d36bfa0))
+
 ## [4.1.8](https://github.com/brickhouse-tech/cfn-include/compare/v4.1.7...v4.1.8) (2026-02-18)
 
 ## [4.1.7](https://github.com/brickhouse-tech/cfn-include/compare/v4.1.6...v4.1.7) (2026-02-17)
