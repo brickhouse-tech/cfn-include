@@ -3,7 +3,7 @@
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import _ from 'lodash';
 
 import include from './index.js';
@@ -11,6 +11,8 @@ import * as yaml from './lib/yaml.js';
 import Client from './lib/cfnclient.js';
 import replaceEnv from './lib/replaceEnv.js';
 import { computeStats, checkThresholds, formatStatsReport } from './lib/stats.js';
+import { buildDependencyGraph } from './lib/graph.js';
+import { suggestSplit, autoSplit, formatSplitReport } from './lib/split.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +36,8 @@ interface CliOptions {
   inject?: Record<string, string>;
   doLog?: boolean;
   stats: boolean;
+  'suggest-split': boolean;
+  'auto-split'?: string;
   'ref-now-ignore-missing'?: boolean;
   'ref-now-ignores'?: string;
 }
@@ -112,6 +116,15 @@ const opts = yargs(hideBin(process.argv))
       desc: 'report template statistics and CloudFormation limit warnings to stderr',
       default: false,
       boolean: true,
+    },
+    'suggest-split': {
+      desc: 'analyze template and suggest how to split into multiple stacks',
+      default: false,
+      boolean: true,
+    },
+    'auto-split': {
+      desc: 'split template into multiple stacks and write to the specified output directory',
+      string: true,
     },
     'ref-now-ignore-missing': {
       boolean: true,
@@ -231,6 +244,45 @@ promise
         }
       }
       console.error('');
+    }
+
+    // Suggest split
+    if (opts['suggest-split'] || opts['auto-split']) {
+      const graph = buildDependencyGraph(template);
+      const suggestion = suggestSplit(template, graph);
+
+      if (opts['suggest-split']) {
+        console.error(formatSplitReport(suggestion));
+        console.error('');
+      }
+
+      if (opts['auto-split']) {
+        const outputDir = path.resolve(opts['auto-split']);
+        mkdirSync(outputDir, { recursive: true });
+
+        const result = autoSplit(template, graph, suggestion);
+
+        for (const stack of result.stacks) {
+          const filename = `${stack.name}${opts.yaml ? '.yaml' : '.json'}`;
+          const content = opts.yaml
+            ? yaml.dump(stack.template, { lineWidth: opts.lineWidth })
+            : JSON.stringify(stack.template, null, 2);
+          writeFileSync(path.join(outputDir, filename), content);
+          console.error(`  ✅ ${filename} (${stack.resourceIds.length} resources)`);
+        }
+
+        if (result.parent) {
+          const filename = `Parent${opts.yaml ? '.yaml' : '.json'}`;
+          const content = opts.yaml
+            ? yaml.dump(result.parent.template, { lineWidth: opts.lineWidth })
+            : JSON.stringify(result.parent.template, null, 2);
+          writeFileSync(path.join(outputDir, filename), content);
+          console.error(`  ✅ ${filename} (orchestrator)`);
+        }
+
+        console.error(`\nWrote ${result.stacks.length + (result.parent ? 1 : 0)} templates to ${outputDir}`);
+        console.error('');
+      }
     }
 
     console.log(opts.yaml ? yaml.dump(template, { lineWidth: opts.lineWidth }) : JSON.stringify(template, null, opts.minimize ? null : 2));
