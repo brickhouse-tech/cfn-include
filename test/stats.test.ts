@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { computeStats, checkThresholds, formatStatsReport } from '../dist/lib/stats.js';
+import {
+  computeStats,
+  checkThresholds,
+  formatStatsReport,
+  CFN_LIMITS,
+  CFN_RESOURCE_LIMIT,
+  CFN_OUTPUT_LIMIT,
+  CFN_TEMPLATE_BYTES_LIMIT,
+  WARNING_THRESHOLD,
+} from '../dist/lib/stats.js';
 
 describe('stats', () => {
   describe('computeStats', () => {
@@ -16,8 +25,8 @@ describe('stats', () => {
       const stats = computeStats(template);
       expect(stats.resourceCount).toBe(2);
       expect(stats.outputCount).toBe(1);
-      expect(stats.resourcePercent).toBeCloseTo((2 / 500) * 100, 1);
-      expect(stats.outputPercent).toBeCloseTo((1 / 200) * 100, 1);
+      expect(stats.resourcePercent).toBeCloseTo((2 / CFN_RESOURCE_LIMIT) * 100, 1);
+      expect(stats.outputPercent).toBeCloseTo((1 / CFN_OUTPUT_LIMIT) * 100, 1);
       expect(stats.templateBytes).toBeGreaterThan(0);
       expect(stats.resourceTypes).toEqual({
         'AWS::S3::Bucket': 1,
@@ -51,21 +60,40 @@ describe('stats', () => {
       const stats = computeStats(template, serialized);
       expect(stats.templateBytes).toBe(Buffer.byteLength(serialized, 'utf8'));
     });
+
+    it('reports correct limits from constants', () => {
+      const stats = computeStats({});
+      expect(stats.resourceLimit).toBe(CFN_RESOURCE_LIMIT);
+      expect(stats.outputLimit).toBe(CFN_OUTPUT_LIMIT);
+      expect(stats.templateLimit).toBe(CFN_TEMPLATE_BYTES_LIMIT);
+    });
+  });
+
+  describe('CFN_LIMITS', () => {
+    it('aggregates individual limit constants', () => {
+      expect(CFN_LIMITS.resources).toBe(CFN_RESOURCE_LIMIT);
+      expect(CFN_LIMITS.outputs).toBe(CFN_OUTPUT_LIMIT);
+      expect(CFN_LIMITS.templateBytes).toBe(CFN_TEMPLATE_BYTES_LIMIT);
+    });
   });
 
   describe('checkThresholds', () => {
-    it('returns no warnings when under 80%', () => {
+    const thresholdCount = (limit: number) => Math.ceil(limit * WARNING_THRESHOLD);
+
+    it('returns no warnings when under threshold', () => {
+      const underThreshold = thresholdCount(CFN_RESOURCE_LIMIT) - 1;
       const stats = computeStats({
         Resources: Object.fromEntries(
-          Array.from({ length: 100 }, (_, i) => [`R${i}`, { Type: 'AWS::S3::Bucket' }]),
+          Array.from({ length: underThreshold }, (_, i) => [`R${i}`, { Type: 'AWS::S3::Bucket' }]),
         ),
       });
       expect(checkThresholds(stats)).toEqual([]);
     });
 
-    it('warns when resources >= 80%', () => {
+    it('warns when resources >= threshold', () => {
+      const atThreshold = thresholdCount(CFN_RESOURCE_LIMIT);
       const resources = Object.fromEntries(
-        Array.from({ length: 400 }, (_, i) => [`R${i}`, { Type: 'AWS::S3::Bucket' }]),
+        Array.from({ length: atThreshold }, (_, i) => [`R${i}`, { Type: 'AWS::S3::Bucket' }]),
       );
       const stats = computeStats({ Resources: resources });
       const warnings = checkThresholds(stats);
@@ -73,20 +101,20 @@ describe('stats', () => {
       expect(warnings.some((w) => w.message.includes('Resource count'))).toBe(true);
     });
 
-    it('warns when outputs >= 80%', () => {
+    it('warns when outputs >= threshold', () => {
+      const atThreshold = thresholdCount(CFN_OUTPUT_LIMIT);
       const outputs = Object.fromEntries(
-        Array.from({ length: 160 }, (_, i) => [`O${i}`, { Value: `v${i}` }]),
+        Array.from({ length: atThreshold }, (_, i) => [`O${i}`, { Value: `v${i}` }]),
       );
       const stats = computeStats({ Outputs: outputs });
       const warnings = checkThresholds(stats);
       expect(warnings.some((w) => w.message.includes('Output count'))).toBe(true);
     });
 
-    it('warns when template size >= 80%', () => {
-      // Create a stats object with artificially high template percent
+    it('warns when template size >= threshold', () => {
       const stats = computeStats({});
-      stats.templatePercent = 85;
-      stats.templateBytes = 890000;
+      stats.templatePercent = WARNING_THRESHOLD * 100 + 5;
+      stats.templateBytes = Math.ceil(CFN_TEMPLATE_BYTES_LIMIT * (WARNING_THRESHOLD + 0.05));
       const warnings = checkThresholds(stats);
       expect(warnings.some((w) => w.message.includes('Template size'))).toBe(true);
     });
@@ -104,8 +132,8 @@ describe('stats', () => {
       });
       const report = formatStatsReport(stats);
       expect(report).toContain('CloudFormation Template Statistics');
-      expect(report).toContain('Resources: 1/500');
-      expect(report).toContain('Outputs:   1/200');
+      expect(report).toContain(`Resources: 1/${CFN_RESOURCE_LIMIT}`);
+      expect(report).toContain(`Outputs:   1/${CFN_OUTPUT_LIMIT}`);
       expect(report).toContain('AWS::S3::Bucket: 1');
     });
   });

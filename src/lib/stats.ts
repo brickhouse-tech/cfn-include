@@ -30,20 +30,27 @@ export interface StatsWarning {
 }
 
 /**
- * CloudFormation service quotas.
+ * CloudFormation service quotas — individual constants for true immutability.
  * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html
  */
-const CFN_LIMITS = {
-  /** @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html - "Resources" */
-  resources: 500,
-  /** @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html - "Outputs" */
-  outputs: 200,
-  /** @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html - "Template body size" */
-  templateBytes: 1_048_576, // 1MB
+
+/** @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html - "Resources" */
+export const CFN_RESOURCE_LIMIT = 500 as const;
+
+/** @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html - "Outputs" */
+export const CFN_OUTPUT_LIMIT = 200 as const;
+
+/** @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html - "Template body size" */
+export const CFN_TEMPLATE_BYTES_LIMIT = 1_048_576 as const; // 1MB
+
+export const CFN_LIMITS = {
+  resources: CFN_RESOURCE_LIMIT,
+  outputs: CFN_OUTPUT_LIMIT,
+  templateBytes: CFN_TEMPLATE_BYTES_LIMIT,
 } as const;
 
 /** Warn when usage reaches this fraction of the CloudFormation limit. */
-const WARNING_THRESHOLD = 0.8; // 80%
+export const WARNING_THRESHOLD = 0.8 as const; // 80%
 
 /**
  * Compute statistics for a resolved CloudFormation template.
