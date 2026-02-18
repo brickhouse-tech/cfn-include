@@ -1,4 +1,4 @@
-# Phase 5: Template Stats & Auto-Split Oversized Stacks
+# Phase 4: Template Stats & Auto-Split Oversized Stacks
 
 **Date:** February 2026  
 **Issue:** [#90](https://github.com/brickhouse-tech/cfn-include/issues/90)  
