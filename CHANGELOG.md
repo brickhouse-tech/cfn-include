@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.3.0](https://github.com/brickhouse-tech/cfn-include/compare/v4.2.2...v4.3.0) (2026-02-19)
+
+
+### Features
+
+* add template auto-split with dependency graph, suggestions, and code generation ([#90](https://github.com/brickhouse-tech/cfn-include/issues/90)) ([950a90d](https://github.com/brickhouse-tech/cfn-include/commit/950a90da29e924f44436729f9919f659074e6b48))
+
 ## [4.2.2](https://github.com/brickhouse-tech/cfn-include/compare/v4.2.1...v4.2.2) (2026-02-18)
 
 
