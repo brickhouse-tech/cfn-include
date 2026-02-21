@@ -1,0 +1,278 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Highly interconnected template - stress test for clustering algorithm'
+
+Conditions:
+  IsProd: !Equals [!Ref Environment, prod]
+  IsDev: !Equals [!Ref Environment, dev]
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+
+Resources:
+  # Create a mesh of Lambda functions that all reference each other
+  # This creates a highly connected graph
+  
+  Lambda01:
+    Type: AWS::Lambda::Function
+    Condition: IsProd
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_02: !GetAtt Lambda02.Arn
+          FUNC_03: !GetAtt Lambda03.Arn
+          FUNC_05: !Ref Lambda05
+
+  Lambda02:
+    Type: AWS::Lambda::Function
+    Condition: IsProd
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_01: !GetAtt Lambda01.Arn
+          FUNC_04: !GetAtt Lambda04.Arn
+          FUNC_06: !Ref Lambda06
+
+  Lambda03:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_01: !GetAtt Lambda01.Arn
+          FUNC_04: !GetAtt Lambda04.Arn
+          FUNC_07: !Ref Lambda07
+
+  Lambda04:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_02: !GetAtt Lambda02.Arn
+          FUNC_03: !GetAtt Lambda03.Arn
+          FUNC_08: !Ref Lambda08
+
+  Lambda05:
+    Type: AWS::Lambda::Function
+    Condition: IsDev
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_01: !GetAtt Lambda01.Arn
+          FUNC_06: !GetAtt Lambda06.Arn
+          FUNC_09: !Ref Lambda09
+
+  Lambda06:
+    Type: AWS::Lambda::Function
+    Condition: IsDev
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_02: !GetAtt Lambda02.Arn
+          FUNC_05: !GetAtt Lambda05.Arn
+          FUNC_10: !Ref Lambda10
+
+  Lambda07:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_03: !GetAtt Lambda03.Arn
+          FUNC_08: !GetAtt Lambda08.Arn
+          FUNC_11: !Ref Lambda11
+
+  Lambda08:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_04: !GetAtt Lambda04.Arn
+          FUNC_07: !GetAtt Lambda07.Arn
+          FUNC_12: !Ref Lambda12
+
+  Lambda09:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_05: !GetAtt Lambda05.Arn
+          FUNC_10: !GetAtt Lambda10.Arn
+
+  Lambda10:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_06: !GetAtt Lambda06.Arn
+          FUNC_09: !GetAtt Lambda09.Arn
+
+  Lambda11:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_07: !GetAtt Lambda07.Arn
+          FUNC_12: !GetAtt Lambda12.Arn
+
+  Lambda12:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: 'exports.handler = async () => ({ statusCode: 200 });'
+      Environment:
+        Variables:
+          FUNC_08: !GetAtt Lambda08.Arn
+          FUNC_11: !GetAtt Lambda11.Arn
+
+  # Add some DynamoDB tables that are referenced by multiple lambdas
+  Table01:
+    Type: AWS::DynamoDB::Table
+    Condition: IsProd
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  Table02:
+    Type: AWS::DynamoDB::Table
+    Condition: IsDev
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # IAM roles that share conditions
+  Role01:
+    Type: AWS::IAM::Role
+    Condition: IsProd
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: !GetAtt Table01.Arn
+
+  Role02:
+    Type: AWS::IAM::Role
+    Condition: IsDev
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: !GetAtt Table02.Arn
+
+  # SNS Topics referenced by lambdas
+  Topic01:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Topic01
+
+  Topic02:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Topic02
+
+  # Event rules that connect different pieces
+  Rule01:
+    Type: AWS::Events::Rule
+    Properties:
+      State: ENABLED
+      EventPattern:
+        source:
+          - custom.app
+      Targets:
+        - Arn: !GetAtt Lambda01.Arn
+          Id: Lambda01Target
+        - Arn: !GetAtt Lambda03.Arn
+          Id: Lambda03Target
+
+  Rule02:
+    Type: AWS::Events::Rule
+    Properties:
+      State: ENABLED
+      EventPattern:
+        source:
+          - custom.app
+      Targets:
+        - Arn: !GetAtt Lambda02.Arn
+          Id: Lambda02Target
+        - Arn: !GetAtt Lambda04.Arn
+          Id: Lambda04Target

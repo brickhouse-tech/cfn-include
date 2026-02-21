@@ -12,7 +12,8 @@ import Client from './lib/cfnclient.js';
 import replaceEnv from './lib/replaceEnv.js';
 import { computeStats, checkThresholds, formatStatsReport } from './lib/stats.js';
 import { buildDependencyGraph } from './lib/graph.js';
-import { suggestSplit, autoSplit, formatSplitReport } from './lib/split.js';
+import { suggestSplit, autoSplit, formatSplitReport, suggestSplitV2 } from './lib/split.js';
+import { formatDetailedReport } from './lib/suggestions.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +38,7 @@ interface CliOptions {
   doLog?: boolean;
   stats: boolean;
   'suggest-split': boolean;
+  'suggest-split-detailed': boolean;
   'auto-split'?: string;
   'ref-now-ignore-missing'?: boolean;
   'ref-now-ignores'?: string;
@@ -119,6 +121,11 @@ const opts = yargs(hideBin(process.argv))
     },
     'suggest-split': {
       desc: 'analyze template and suggest how to split into multiple stacks',
+      default: false,
+      boolean: true,
+    },
+    'suggest-split-detailed': {
+      desc: 'show detailed split analysis with multiple strategies (Phase 4.2)',
       default: false,
       boolean: true,
     },
@@ -244,6 +251,15 @@ promise
         }
       }
       console.error('');
+    }
+
+    // Suggest split (detailed)
+    if (opts['suggest-split-detailed']) {
+      const graph = buildDependencyGraph(template);
+      const suggestion = suggestSplitV2(template, graph);
+      console.error(formatDetailedReport(suggestion));
+      console.error('');
+      process.exit(0);
     }
 
     // Suggest split
