@@ -13,6 +13,8 @@
 
 import type { TemplateDocument, TemplateValue, Resource, Output } from '../types/template.js';
 import type { DependencyGraph, DependencyEdge } from './graph.js';
+import { clusterResources, type ResourceCluster } from './clustering.js';
+import { generateSplitSuggestions as generateDetailedSuggestions } from './suggestions.js';
 
 // ── Category Heuristics ──────────────────────────────────────────────────────
 
@@ -208,7 +210,7 @@ export function suggestSplit(
  * Topological sort of groups based on cross-stack deps.
  * Groups that are depended upon deploy first.
  */
-function topoSortGroups(groups: ResourceGroup[], deps: CrossStackDependency[]): string[] {
+export function topoSortGroups(groups: ResourceGroup[], deps: CrossStackDependency[]): string[] {
   const names = groups.map((g) => g.name);
   const inDegree = new Map<string, number>();
   const adj = new Map<string, Set<string>>();
@@ -658,4 +660,19 @@ function generateParentStack(
     template: parentTemplate,
     resourceIds: [],
   };
+}
+
+// ── Phase 4.2: Enhanced Split with Smart Clustering ──────────────────────────
+
+/**
+ * Enhanced split suggestion using smart clustering (Phase 4.2).
+ * Returns detailed analysis with multiple strategy options.
+ *
+ * This is the new recommended API for split suggestions.
+ */
+export function suggestSplitV2(
+  template: TemplateDocument,
+  graph: DependencyGraph,
+) {
+  return generateDetailedSuggestions(template, graph);
 }

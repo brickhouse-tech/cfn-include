@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Test template with circular dependencies for Phase 4.2 SCC detection'
+
+Resources:
+  # Simple cycle: A -> B -> C -> A
+  LambdaA:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaA
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          exports.handler = async () => ({ statusCode: 200 });
+      Environment:
+        Variables:
+          LAMBDA_B_ARN: !GetAtt LambdaB.Arn
+
+  LambdaB:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaB
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          exports.handler = async () => ({ statusCode: 200 });
+      Environment:
+        Variables:
+          LAMBDA_C_ARN: !GetAtt LambdaC.Arn
+
+  LambdaC:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaC
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          exports.handler = async () => ({ statusCode: 200 });
+      Environment:
+        Variables:
+          LAMBDA_A_ARN: !GetAtt LambdaA.Arn
+
+  # Complex cycle: D <-> E (bidirectional)
+  LambdaD:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaD
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          exports.handler = async () => ({ statusCode: 200 });
+      Environment:
+        Variables:
+          LAMBDA_E_ARN: !GetAtt LambdaE.Arn
+
+  LambdaE:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaE
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          exports.handler = async () => ({ statusCode: 200 });
+      Environment:
+        Variables:
+          LAMBDA_D_ARN: !GetAtt LambdaD.Arn
+
+  # Independent resource (should not be in cycle)
+  LambdaIndependent:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaIndependent
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          exports.handler = async () => ({ statusCode: 200 });
+
+  # Resource that depends on cycle but isn't part of it
+  LambdaConsumer:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaConsumer
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Code:
+        ZipFile: |
+          exports.handler = async () => ({ statusCode: 200 });
+      Environment:
+        Variables:
+          LAMBDA_A_ARN: !GetAtt LambdaA.Arn
+          LAMBDA_D_ARN: !GetAtt LambdaD.Arn
