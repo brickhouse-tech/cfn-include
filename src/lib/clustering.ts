@@ -305,7 +305,18 @@ function mergeByConnectivity(
 
   const sortedConnections = Array.from(clusterConnections.entries()).sort((a, b) => b[1] - a[1]);
 
-  for (const [key, _score] of sortedConnections) {
+  // Stopping criteria: preserve meaningful splits
+  const MIN_CONNECTION_SCORE = 100; // Only merge if connection strength > 100
+  const MIN_CLUSTERS_TO_PRESERVE = 2; // Always keep at least 2 clusters if template has >20 resources
+
+  for (const [key, score] of sortedConnections) {
+    // Stop if connection strength is too low (weak coupling)
+    if (score < MIN_CONNECTION_SCORE) break;
+
+    // Stop if we're down to minimum clusters (preserve meaningful splits)
+    const remainingClusters = clusters.length - merged.size;
+    if (remainingClusters <= MIN_CLUSTERS_TO_PRESERVE && graph.resourceIds.size > 20) break;
+
     const [c1Str, c2Str] = key.split(':');
     let c1 = parseInt(c1Str);
     let c2 = parseInt(c2Str);

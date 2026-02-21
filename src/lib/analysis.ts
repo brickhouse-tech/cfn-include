@@ -157,9 +157,13 @@ export function scoreCluster(
     }
   }
 
+  // Cohesion: normalize by average graph density (not theoretical max)
+  // Typical CFN templates have ~2-4 deps per resource, not full mesh
+  const avgDepsPerResource = graph.edges.length / Math.max(1, graph.resourceIds.size);
+  const expectedInternalEdges = resourceIds.length * avgDepsPerResource * 0.7; // 70% internal is realistic
   const cohesion =
-    resourceIds.length > 1
-      ? internalEdges / ((resourceIds.length * (resourceIds.length - 1)) / 2)
+    resourceIds.length > 1 && expectedInternalEdges > 0
+      ? Math.min(1, internalEdges / expectedInternalEdges)
       : 0;
 
   const coupling = externalEdges / Math.max(1, resourceIds.length);
