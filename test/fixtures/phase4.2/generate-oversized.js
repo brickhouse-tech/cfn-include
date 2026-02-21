@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 const template = {
   AWSTemplateFormatVersion: '2010-09-09',
   Description: 'Oversized template with 600+ resources for Phase 4.2 testing',
-  Resources: {}
+  Resources: {},
 };
 
 // Create VPC and networking foundation (50 resources)
@@ -24,20 +24,20 @@ template.Resources.VPC = {
   Properties: {
     CidrBlock: '10.0.0.0/16',
     EnableDnsHostnames: true,
-    EnableDnsSupport: true
-  }
+    EnableDnsSupport: true,
+  },
 };
 
 template.Resources.InternetGateway = {
-  Type: 'AWS::EC2::InternetGateway'
+  Type: 'AWS::EC2::InternetGateway',
 };
 
 template.Resources.VPCGatewayAttachment = {
   Type: 'AWS::EC2::VPCGatewayAttachment',
   Properties: {
     VpcId: { Ref: 'VPC' },
-    InternetGatewayId: { Ref: 'InternetGateway' }
-  }
+    InternetGatewayId: { Ref: 'InternetGateway' },
+  },
 };
 
 // Create 20 subnets across 2 AZs
@@ -47,8 +47,8 @@ for (let i = 1; i <= 20; i++) {
     Properties: {
       VpcId: { Ref: 'VPC' },
       CidrBlock: `10.0.${i}.0/24`,
-      AvailabilityZone: { 'Fn::Select': [i % 2, { 'Fn::GetAZs': '' }] }
-    }
+      AvailabilityZone: { 'Fn::Select': [i % 2, { 'Fn::GetAZs': '' }] },
+    },
   };
 }
 
@@ -57,8 +57,8 @@ for (let i = 1; i <= 10; i++) {
   template.Resources[`RouteTable${i}`] = {
     Type: 'AWS::EC2::RouteTable',
     Properties: {
-      VpcId: { Ref: 'VPC' }
-    }
+      VpcId: { Ref: 'VPC' },
+    },
   };
 }
 
@@ -70,8 +70,8 @@ for (let i = 1; i <= 10; i++) {
     Properties: {
       RouteTableId: { Ref: `RouteTable${i}` },
       DestinationCidrBlock: '0.0.0.0/0',
-      GatewayId: { Ref: 'InternetGateway' }
-    }
+      GatewayId: { Ref: 'InternetGateway' },
+    },
   };
 }
 
@@ -84,7 +84,7 @@ for (let i = 1; i <= 15; i++) {
       IpProtocol: 'tcp',
       FromPort: 8080,
       ToPort: 8080,
-      SourceSecurityGroupId: { Ref: `SecurityGroup${i - 1}` }
+      SourceSecurityGroupId: { Ref: `SecurityGroup${i - 1}` },
     });
   }
   if (i > 2) {
@@ -92,7 +92,7 @@ for (let i = 1; i <= 15; i++) {
       IpProtocol: 'tcp',
       FromPort: 443,
       ToPort: 443,
-      SourceSecurityGroupId: { Ref: `SecurityGroup${i - 2}` }
+      SourceSecurityGroupId: { Ref: `SecurityGroup${i - 2}` },
     });
   }
   
@@ -101,8 +101,8 @@ for (let i = 1; i <= 15; i++) {
     Properties: {
       GroupDescription: `Security Group ${i}`,
       VpcId: { Ref: 'VPC' },
-      SecurityGroupIngress: rules
-    }
+      SecurityGroupIngress: rules,
+    },
   };
 }
 
@@ -129,18 +129,18 @@ for (let i = 1; i <= 200; i++) {
       Handler: 'index.handler',
       Role: { 'Fn::GetAtt': [`LambdaRole${Math.floor(i / 20) + 1}`, 'Arn'] },
       Code: {
-        ZipFile: `exports.handler = async () => ({ statusCode: 200, body: 'Lambda ${i}' });`
+        ZipFile: `exports.handler = async () => ({ statusCode: 200, body: 'Lambda ${i}' });`,
       },
       VpcConfig: {
         SecurityGroupIds: [sgRef],
         SubnetIds: [
-          { Ref: `Subnet${(i % 20) + 1}` }
-        ]
+          { Ref: `Subnet${(i % 20) + 1}` },
+        ],
       },
       Environment: {
-        Variables: envVars
-      }
-    }
+        Variables: envVars,
+      },
+    },
   };
 }
 
@@ -154,13 +154,13 @@ for (let i = 1; i <= 10; i++) {
         Statement: [{
           Effect: 'Allow',
           Principal: { Service: 'lambda.amazonaws.com' },
-          Action: 'sts:AssumeRole'
-        }]
+          Action: 'sts:AssumeRole',
+        }],
       },
       ManagedPolicyArns: [
-        'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
-      ]
-    }
+        'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole',
+      ],
+    },
   };
 }
 
@@ -173,13 +173,13 @@ for (let i = 1; i <= 100; i++) {
       BillingMode: 'PAY_PER_REQUEST',
       AttributeDefinitions: [{
         AttributeName: 'id',
-        AttributeType: 'S'
+        AttributeType: 'S',
       }],
       KeySchema: [{
         AttributeName: 'id',
-        KeyType: 'HASH'
-      }]
-    }
+        KeyType: 'HASH',
+      }],
+    },
   };
 }
 
@@ -189,9 +189,9 @@ for (let i = 1; i <= 50; i++) {
     Type: 'AWS::S3::Bucket',
     Properties: {
       VersioningConfiguration: {
-        Status: 'Enabled'
-      }
-    }
+        Status: 'Enabled',
+      },
+    },
   };
 }
 
@@ -200,8 +200,8 @@ for (let i = 1; i <= 30; i++) {
   template.Resources[`Topic${i}`] = {
     Type: 'AWS::SNS::Topic',
     Properties: {
-      DisplayName: `Topic ${i}`
-    }
+      DisplayName: `Topic ${i}`,
+    },
   };
 }
 
@@ -211,8 +211,8 @@ for (let i = 1; i <= 30; i++) {
     Type: 'AWS::SQS::Queue',
     Properties: {
       QueueName: `Queue${i}`,
-      VisibilityTimeout: 300
-    }
+      VisibilityTimeout: 300,
+    },
   };
 }
 
@@ -231,10 +231,10 @@ for (let i = 1; i <= 20; i++) {
       Threshold: 100,
       Dimensions: [{
         Name: 'FunctionName',
-        Value: { Ref: `Lambda${i}` }
+        Value: { Ref: `Lambda${i}` },
       }],
-      AlarmActions: [{ Ref: `Topic${(i % 30) + 1}` }]
-    }
+      AlarmActions: [{ Ref: `Topic${(i % 30) + 1}` }],
+    },
   };
 }
 
@@ -243,12 +243,12 @@ for (let i = 1; i <= 20; i++) {
   const targets = [];
   targets.push({
     Arn: { 'Fn::GetAtt': [`Lambda${i}`, 'Arn'] },
-    Id: `Target${i}`
+    Id: `Target${i}`,
   });
   if (i <= 10) {
     targets.push({
       Arn: { 'Fn::GetAtt': [`Lambda${i + 10}`, 'Arn'] },
-      Id: `Target${i + 10}`
+      Id: `Target${i + 10}`,
     });
   }
   
@@ -259,10 +259,10 @@ for (let i = 1; i <= 20; i++) {
       State: 'ENABLED',
       EventPattern: {
         source: ['custom.app'],
-        'detail-type': [`Type${i}`]
+        'detail-type': [`Type${i}`],
       },
-      Targets: targets
-    }
+      Targets: targets,
+    },
   };
 }
 
@@ -275,9 +275,9 @@ for (let i = 1; i <= 30; i++) {
       DBSubnetGroupDescription: `Subnet group for DB ${i}`,
       SubnetIds: [
         { Ref: `Subnet${(i % 20) + 1}` },
-        { Ref: `Subnet${((i + 1) % 20) + 1}` }
-      ]
-    }
+        { Ref: `Subnet${((i + 1) % 20) + 1}` },
+      ],
+    },
   };
   
   template.Resources[`Database${i}`] = {
@@ -291,8 +291,8 @@ for (let i = 1; i <= 30; i++) {
       MasterUsername: 'admin',
       MasterUserPassword: `password${i}`,
       DBSubnetGroupName: { Ref: `DBSubnetGroup${i}` },
-      VPCSecurityGroups: [{ Ref: `SecurityGroup${(i % 15) + 1}` }]
-    }
+      VPCSecurityGroups: [{ Ref: `SecurityGroup${(i % 15) + 1}` }],
+    },
   };
 }
 
@@ -304,9 +304,9 @@ for (let i = 1; i <= 20; i++) {
     Properties: {
       Description: `Cache subnet group ${i}`,
       SubnetIds: [
-        { Ref: `Subnet${(i % 20) + 1}` }
-      ]
-    }
+        { Ref: `Subnet${(i % 20) + 1}` },
+      ],
+    },
   };
   
   template.Resources[`CacheCluster${i}`] = {
@@ -316,8 +316,8 @@ for (let i = 1; i <= 20; i++) {
       CacheNodeType: 'cache.t3.micro',
       NumCacheNodes: 1,
       CacheSubnetGroupName: { Ref: `CacheSubnetGroup${i}` },
-      VpcSecurityGroupIds: [{ Ref: `SecurityGroup${(i % 15) + 1}` }]
-    }
+      VpcSecurityGroupIds: [{ Ref: `SecurityGroup${(i % 15) + 1}` }],
+    },
   };
 }
 
@@ -328,8 +328,8 @@ for (let i = 1; i <= 50; i++) {
     Description: `ARN of Lambda ${i}`,
     Value: { 'Fn::GetAtt': [`Lambda${i}`, 'Arn'] },
     Export: {
-      Name: { 'Fn::Sub': `\${AWS::StackName}-Lambda${i}Arn` }
-    }
+      Name: { 'Fn::Sub': `\${AWS::StackName}-Lambda${i}Arn` },
+    },
   };
 }
 
