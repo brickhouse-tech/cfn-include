@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.4.0](https://github.com/brickhouse-tech/cfn-include/compare/v4.3.2...v4.4.0) (2026-02-21)
+
+
+### Features
+
+* add executable YAML support with shebang (cfn/yml/yaml) ([865b900](https://github.com/brickhouse-tech/cfn-include/commit/865b900a3fa8d468fb031b05519fef002423c66c))
+
 ## [4.3.2](https://github.com/brickhouse-tech/cfn-include/compare/v4.3.1...v4.3.2) (2026-02-20)
 
 
