@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.4.1](https://github.com/brickhouse-tech/cfn-include/compare/v4.4.0...v4.4.1) (2026-02-21)
+
+
+### Bug Fixes
+
+* **deps:** fix CVE-2026-26996 minimatch ReDoS + bump cft-utils to 0.1.39 ([3fb8ceb](https://github.com/brickhouse-tech/cfn-include/commit/3fb8ceb435b5078fa8a60f2e7712e3a97839c6fa))
+* **deps:** use cft-utils 0.1.38 (0.1.39 was never published) ([db8d666](https://github.com/brickhouse-tech/cfn-include/commit/db8d666f4182f4e2317f0af7eb322821e857d7ed))
+
 ## [4.4.0](https://github.com/brickhouse-tech/cfn-include/compare/v4.3.2...v4.4.0) (2026-02-21)
 
 
