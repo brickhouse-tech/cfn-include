@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.5.0](https://github.com/brickhouse-tech/cfn-include/compare/v4.4.1...v4.5.0) (2026-02-25)
+
+
+### Features
+
+* Phase 4.2 - Smart clustering for stack splitting ([e5a6a7b](https://github.com/brickhouse-tech/cfn-include/commit/e5a6a7b5ea61745ebffc44551dc9b91a6b7a028b)), closes [#90](https://github.com/brickhouse-tech/cfn-include/issues/90)
+
+
+### Bug Fixes
+
+* **phase4.2:** cohesion/coupling calculations + merge stopping criteria ([6094205](https://github.com/brickhouse-tech/cfn-include/commit/60942058d59e7365ef50c9ca04d6ba2ace3eec8f))
+
 ## [4.4.1](https://github.com/brickhouse-tech/cfn-include/compare/v4.4.0...v4.4.1) (2026-02-21)
 
 
