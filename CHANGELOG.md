@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.5.1](https://github.com/brickhouse-tech/cfn-include/compare/v4.5.0...v4.5.1) (2026-02-26)
+
+
+### Bug Fixes
+
+* **deps:** bump basic-ftp from 5.1.0 to 5.2.0 ([8e40b6f](https://github.com/brickhouse-tech/cfn-include/commit/8e40b6ffdd2d7ec70726664068fb0123dfb236e5))
+
 ## [4.5.0](https://github.com/brickhouse-tech/cfn-include/compare/v4.4.1...v4.5.0) (2026-02-25)
 
 
