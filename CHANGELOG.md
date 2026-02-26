@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.0](https://github.com/brickhouse-tech/cfn-include/compare/v4.5.1...v4.6.0) (2026-02-26)
+
+
+### Features
+
+* **test:** add conditional s3.json test support (closes [#84](https://github.com/brickhouse-tech/cfn-include/issues/84)) ([cfb4788](https://github.com/brickhouse-tech/cfn-include/commit/cfb478868922661dd0712840e65af06687b51a08))
+
 ## [4.5.1](https://github.com/brickhouse-tech/cfn-include/compare/v4.5.0...v4.5.1) (2026-02-26)
 
 
