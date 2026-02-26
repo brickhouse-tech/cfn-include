@@ -25,6 +25,7 @@ jobs:
       - run: npm install
       - run: npm run lint
       - run: npm test
+      # Note: S3 tests (test/s3.test.ts) are skipped when AWS credentials are not available
 
   shell-test:
     name: Executable YAML Shell Tests
