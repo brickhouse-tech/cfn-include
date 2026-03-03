@@ -57,5 +57,7 @@ jobs:
             npx commit-and-tag-version
           fi
 
+          # Pull any commits that landed during the test phase (e.g. dependabot merges)
+          git pull --rebase origin master
           git push
           git push --tags
