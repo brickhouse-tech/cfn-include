@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.7](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.6...v4.6.7) (2026-03-11)
+
+
+### Bug Fixes
+
+* change dependabot merge-method from squash to merge to preserve commit history ([147e521](https://github.com/brickhouse-tech/cfn-include/commit/147e521150ef983974f07d0019da965a560bf875))
+
 ## [4.6.6](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.5...v4.6.6) (2026-03-06)
 
 ## [4.6.5](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.4...v4.6.5) (2026-03-05)
