@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.8](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.6...v4.6.8) (2026-03-18)
+
+
+### Bug Fixes
+
+* change dependabot merge-method from squash to merge to preserve commit history ([147e521](https://github.com/brickhouse-tech/cfn-include/commit/147e521150ef983974f07d0019da965a560bf875))
+* **deps:** bump the all group across 1 directory with 10 updates ([39b0c52](https://github.com/brickhouse-tech/cfn-include/commit/39b0c52e49e3ad0af04b8842fa836852593d89f1))
+* **deps:** bump the all group with 2 updates ([b97f4e0](https://github.com/brickhouse-tech/cfn-include/commit/b97f4e07c5317f5be9356ff12d0f08aade4195fe))
+* **deps:** bump the all group with 2 updates ([d5afc8b](https://github.com/brickhouse-tech/cfn-include/commit/d5afc8bae10f748974613a9af8699e9af7dee0ce))
+* **deps:** bump the all group with 2 updates ([b07e188](https://github.com/brickhouse-tech/cfn-include/commit/b07e188642f414800782e63fee0acfb418f2a058))
+* **deps:** bump the all group with 4 updates ([4d1517a](https://github.com/brickhouse-tech/cfn-include/commit/4d1517a1a9bd8cc1b61a799ed7bc5303e9dff5a2))
+* **deps:** bump the all group with 4 updates ([f78f170](https://github.com/brickhouse-tech/cfn-include/commit/f78f170af76a46ed7918133dc83f23f4036aa9a0))
+* **security:** bump fast-xml-parser and flatted for CVE fixes ([d29f4c3](https://github.com/brickhouse-tech/cfn-include/commit/d29f4c35664c81099cd99aeaa3b27376443d23ab))
+
 ## [4.6.7](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.6...v4.6.7) (2026-03-11)
 
 
