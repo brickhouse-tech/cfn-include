@@ -46,3 +46,20 @@ jobs:
 
       - name: Run CI executable wrapper test
         run: bash ./scripts/test-ci.sh
+
+  tests:
+    name: tests
+    needs: [test, shell-test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          results=($(echo '${{ toJSON(needs.*.result) }}' | jq -r '.[]'))
+          for r in "${results[@]}"; do
+            if [[ "$r" != "success" ]]; then
+              echo "One or more jobs failed: $r"
+              exit 1
+            fi
+          done
+          echo "All jobs passed"
