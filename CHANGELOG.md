@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.11](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.10...v4.6.11) (2026-04-04)
+
+
+### Bug Fixes
+
+* **deps:** bump brace-expansion ([e35db6e](https://github.com/brickhouse-tech/cfn-include/commit/e35db6ee65b9723c697bae03c3e79f4efc2819bb))
+* **deps:** bump lodash from 4.17.23 to 4.18.1 ([7889824](https://github.com/brickhouse-tech/cfn-include/commit/78898249bbc093bbe63de72275132728bedca5c9))
+* **deps:** bump picomatch from 4.0.3 to 4.0.4 ([5cfceb0](https://github.com/brickhouse-tech/cfn-include/commit/5cfceb0b4a1392052cd7cc5022ff753a26b55734))
+* **deps:** bump the all group with 2 updates ([b6a3089](https://github.com/brickhouse-tech/cfn-include/commit/b6a3089976069b60dc42bb92f179620ba196d60f))
+* **deps:** bump the all group with 2 updates ([4faa91a](https://github.com/brickhouse-tech/cfn-include/commit/4faa91af85da580369e1f1fffa06be33f7929fd7))
+* **deps:** bump the all group with 2 updates ([bc10320](https://github.com/brickhouse-tech/cfn-include/commit/bc10320046a3e8da3b97dd0bd17196a52fd27126))
+* **deps:** bump the all group with 3 updates ([1b1df50](https://github.com/brickhouse-tech/cfn-include/commit/1b1df5066d955b5c0d08a3d75e495e159a42b614))
+* **deps:** bump the all group with 5 updates ([703c2fe](https://github.com/brickhouse-tech/cfn-include/commit/703c2fe43d93b6f43312dc2fa078f4187144367b))
+* **deps:** bump the all group with 6 updates ([9d0ce9c](https://github.com/brickhouse-tech/cfn-include/commit/9d0ce9c7888fd161549a7bbcff2e3bd6af5809af))
+
 ## [4.6.10](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.9...v4.6.10) (2026-03-26)
 
 ## [4.6.9](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.8...v4.6.9) (2026-03-19)
