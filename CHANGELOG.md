@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.12](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.11...v4.6.12) (2026-04-11)
+
+
+### Bug Fixes
+
+* **deps:** bump basic-ftp from 5.2.0 to 5.2.1 ([b9fb263](https://github.com/brickhouse-tech/cfn-include/commit/b9fb26372d05ccbc9dae9dfda8cd6c37d04fb943))
+* **deps:** bump basic-ftp from 5.2.1 to 5.2.2 ([04b02fa](https://github.com/brickhouse-tech/cfn-include/commit/04b02fa772768aae9e7991c82f87f391c0a1b35c))
+* **deps:** bump the all group across 1 directory with 4 updates ([4ee6be4](https://github.com/brickhouse-tech/cfn-include/commit/4ee6be41d43fc1dcd8ad8deadefdbe7d63d883cd))
+* **deps:** bump the all group with 2 updates ([59ab07b](https://github.com/brickhouse-tech/cfn-include/commit/59ab07ba36735688cfa31276e9e17359b0c2f1dc))
+* **deps:** bump the all group with 3 updates ([fafe361](https://github.com/brickhouse-tech/cfn-include/commit/fafe361aec451b3e6924164daedd2733d063b636))
+* **deps:** bump vite from 8.0.3 to 8.0.5 ([bcf78d4](https://github.com/brickhouse-tech/cfn-include/commit/bcf78d4ba84eab6220c0446f6b14709cba4ce3db))
+
 ## [4.6.11](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.10...v4.6.11) (2026-04-04)
 
 
