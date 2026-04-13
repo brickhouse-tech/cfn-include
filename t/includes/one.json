@@ -1,0 +1,3 @@
+{
+  "Fn::Include": "./$FILE_NAME.json"
+}
