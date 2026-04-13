@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.13](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.12...v4.6.13) (2026-04-13)
+
+
+### Tests
+
+* add fixtures for dynamic Fn::Include filename via env var ([67a7bd0](https://github.com/brickhouse-tech/cfn-include/commit/67a7bd0b03b555ecd94818a36ee06b5a3a10572b))
+
 ## [4.6.12](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.11...v4.6.12) (2026-04-11)
 
 
