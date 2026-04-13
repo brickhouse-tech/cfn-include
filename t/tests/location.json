@@ -130,6 +130,17 @@
     }
   },
   {
+    "name": "dynamic filename via env var ($FILE_NAME)",
+    "doEnv": true,
+    "inject": { "FILE_NAME": "two" },
+    "template": {
+      "Fn::Include": "includes/one.json"
+    },
+    "output": {
+      "foo": "bar"
+    }
+  },
+  {
     "name": "deep nested w/ query dev",
     "doEnv": true,
     "template": {

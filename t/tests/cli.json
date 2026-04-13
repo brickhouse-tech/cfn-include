@@ -117,6 +117,17 @@
       "errorMessage": "missed comma"
     },
     {
+      "name": "dynamic filename via env var",
+      "template": "t/includes/one.json",
+      "args": ["--enable", "eval,env"],
+      "env": {
+        "FILE_NAME": "two"
+      },
+      "output": {
+        "foo": "bar"
+      }
+    },
+    {
       "name": "ifEval",
       "env": {
         "CFN_INCLUDE_DO_EVAL": true,
