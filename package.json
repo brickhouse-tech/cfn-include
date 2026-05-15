@@ -87,8 +87,8 @@
     "yargs": "~18.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20",
-    "@commitlint/config-conventional": "^20",
+    "@commitlint/cli": "^21",
+    "@commitlint/config-conventional": "^21",
     "@eslint/js": "^10.0.1",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.17.23",
@@ -96,7 +96,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "better-npm-audit": "3.11.0",
     "commit-and-tag-version": "12",
-    "commitlint": "20",
+    "commitlint": "21",
     "eslint": "10",
     "eslint-config-prettier": "10",
     "eslint-plugin-prettier": "5",
