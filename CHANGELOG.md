@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.15](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.14...v4.6.15) (2026-05-18)
+
 ## [4.6.14](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.13...v4.6.14) (2026-05-17)
 
 
