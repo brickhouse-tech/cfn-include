@@ -1,4 +1,4 @@
-name: tests
+name: ci
 
 on:
   workflow_call:
@@ -47,8 +47,8 @@ jobs:
       - name: Run CI executable wrapper test
         run: bash ./scripts/test-ci.sh
 
-  tests:
-    name: tests
+  gate:
+    name: gate
     needs: [test, shell-test]
     runs-on: ubuntu-latest
     if: always()
