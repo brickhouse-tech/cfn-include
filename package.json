@@ -81,7 +81,7 @@
     "deepmerge": "^4.2.2",
     "glob": "^13.0.0",
     "jmespath": "^0.16.0",
-    "js-yaml": "^4.2.0",
+    "js-yaml": "^5.1.0",
     "lodash": "^4.17.21",
     "proxy-agent": "8.0.2",
     "yargs": "~18.0.0"
