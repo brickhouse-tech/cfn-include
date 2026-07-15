@@ -90,7 +90,6 @@
     "@commitlint/cli": "^21",
     "@commitlint/config-conventional": "^21",
     "@eslint/js": "^10.0.1",
-    "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.17.23",
     "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^4.0.18",

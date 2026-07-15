@@ -1,4 +1,4 @@
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import yamlSchema from './schema.js';
 
 /**
@@ -51,19 +51,25 @@ function jsonMinify(json: string): string {
 }
 
 export function load(res: string): unknown {
-  let json: unknown;
+  // js-yaml 4 returned undefined for an empty document; v5 throws.
+  if (res.trim() === '') return undefined;
+  // Strict JSON (with comments minified away) is tried FIRST. With js-yaml 4
+  // the YAML parser threw on commented JSON and we fell through to this
+  // branch; js-yaml 5's spec-conformant flow parsing instead "succeeds",
+  // swallowing the comments into plain scalars — so YAML-first can no longer
+  // detect JSON-with-comments input. JSON.parse is unambiguous, and for plain
+  // valid JSON, JSON and YAML semantics agree.
   try {
-    json = yaml.load(res, { schema: yamlSchema });
-  } catch (yamlErr) {
+    return JSON.parse(jsonMinify(res));
+  } catch (jsonErr) {
     try {
-      json = JSON.parse(jsonMinify(res));
-    } catch (jsonErr) {
+      return yaml.load(res, { schema: yamlSchema });
+    } catch (yamlErr) {
       const err = new Error(String([yamlErr, jsonErr]));
       err.name = 'SyntaxError';
       throw err;
     }
   }
-  return json;
 }
 
 export interface DumpOptions {
