@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.21](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.20...v4.6.21) (2026-07-15)
+
+
+### Bug Fixes
+
+* **deps:** bump the all group across 1 directory with 12 updates ([e30968f](https://github.com/brickhouse-tech/cfn-include/commit/e30968f1cd034169714bffae6333bbdbc500cffa))
+* **yaml:** migrate custom CFN tag schema to js-yaml 5 API ([404549e](https://github.com/brickhouse-tech/cfn-include/commit/404549ea0d1dcf457320be184f8718d05ca05e54))
+
 ## [4.6.20](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.19...v4.6.20) (2026-06-29)
 
 
