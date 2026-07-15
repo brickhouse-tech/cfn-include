@@ -1,4 +1,10 @@
-import yaml from 'js-yaml';
+import {
+  CORE_SCHEMA,
+  defineMappingTag,
+  defineScalarTag,
+  defineSequenceTag,
+  type TagDefinition as YamlTagDefinition,
+} from 'js-yaml';
 import _ from 'lodash';
 
 interface TagDefinition {
@@ -75,21 +81,64 @@ const tagDefinitions: TagDefinition[] = [
   { short: 'Condition', full: 'Condition', type: 'scalar' },
 ];
 
-const tags = tagDefinitions.map((fn) => {
-  return new yaml.Type('!' + fn.short, {
-    kind: fn.type,
-    construct: function (obj: unknown): Record<string, unknown> {
-      if (fn.dotSyntax && _.isString(obj)) {
-        const indexOfDot = obj.indexOf('.');
-        if (indexOfDot !== -1) {
-          obj = [obj.substr(0, indexOfDot), obj.substr(indexOfDot + 1)];
-        } else {
-          obj = [obj];
-        }
-      }
-      return _.fromPairs([[fn.full, obj]]);
-    },
-  });
+// js-yaml 5 replaced the v4 `new yaml.Type(tag, { kind, construct })` API with
+// per-kind builder factories (defineScalarTag / defineSequenceTag /
+// defineMappingTag). All our tags do the same thing construct() did before:
+// collect the node's value, then wrap it as { <Fn::Full>: value }.
+const tags: YamlTagDefinition[] = tagDefinitions.map((fn) => {
+  const tagName = '!' + fn.short;
+  const wrap = (obj: unknown): Record<string, unknown> => _.fromPairs([[fn.full, obj]]);
+
+  switch (fn.type) {
+    case 'scalar':
+      return defineScalarTag<Record<string, unknown>>(tagName, {
+        resolve: (source) => {
+          let obj: unknown = source;
+          if (fn.dotSyntax && _.isString(obj)) {
+            const indexOfDot = obj.indexOf('.');
+            if (indexOfDot !== -1) {
+              obj = [obj.substring(0, indexOfDot), obj.substring(indexOfDot + 1)];
+            } else {
+              obj = [obj];
+            }
+          }
+          return wrap(obj);
+        },
+      });
+    case 'sequence':
+      return defineSequenceTag<unknown[], Record<string, unknown>>(tagName, {
+        create: () => [],
+        addItem: (carrier, item) => {
+          carrier.push(item);
+        },
+        finalize: (carrier) => wrap(carrier),
+      });
+    case 'mapping':
+      return defineMappingTag<Record<string, unknown>, Record<string, unknown>>(tagName, {
+        create: () => ({}),
+        addPair: (carrier, key, value) => {
+          if (key !== null && typeof key === 'object') {
+            return `${tagName} does not support complex mapping keys`;
+          }
+          const normalizedKey = String(key);
+          if (normalizedKey === '__proto__') {
+            Object.defineProperty(carrier, normalizedKey, {
+              value,
+              enumerable: true,
+              configurable: true,
+              writable: true,
+            });
+          } else {
+            carrier[normalizedKey] = value;
+          }
+          return '';
+        },
+        has: (carrier, key) => Object.prototype.hasOwnProperty.call(carrier, String(key)),
+        keys: (result) => Object.keys(result),
+        get: (result, key) => result[String(key)],
+        finalize: (carrier) => wrap(carrier),
+      });
+  }
 });
 
 // Build array of strings of all Amazon Intrinsic functions
@@ -116,7 +165,9 @@ export const BANG_AMAZON_FUNCS = [
 
 export const EXPLICIT_AMAZON_FUNCS = BANG_AMAZON_FUNCS.map((f) => `Fn::${f}`);
 
-const yamlSchema = yaml.DEFAULT_SCHEMA.extend(tags);
+// v4's yaml.DEFAULT_SCHEMA.extend(tags) → v5's CORE_SCHEMA.withTags(tags).
+// CORE is the v5 equivalent of the v4 default (YAML 1.2 core types).
+const yamlSchema = CORE_SCHEMA.withTags(tags);
 
 /**
  * Test the function key to make sure it's something we should process.
