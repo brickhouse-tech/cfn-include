@@ -104,7 +104,7 @@
     "prettier": "3",
     "serve": "14.2.6",
     "sort-package-json": "3.6.1",
-    "typescript": "^6.0.2",
+    "typescript": "^7.0.2",
     "vitest": "^4.0.18"
   },
   "engines": {
