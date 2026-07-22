@@ -1,0 +1,15 @@
+Defaults: &defaults
+  InstanceType: t3.micro
+  Monitoring: true
+Overrides: &overrides
+  Monitoring: false
+  EbsOptimized: true
+Single:
+  <<: *defaults
+  Name: single
+Multi:
+  <<: [*defaults, *overrides]
+  Name: multi
+Precedence:
+  <<: *defaults
+  InstanceType: m5.large
