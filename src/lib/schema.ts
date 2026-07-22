@@ -1,10 +1,10 @@
 import {
   CORE_SCHEMA,
+  NOT_RESOLVED,
   binaryTag,
   defineMappingTag,
   defineScalarTag,
   defineSequenceTag,
-  mergeTag,
   omapTag,
   pairsTag,
   timestampTag,
@@ -86,6 +86,95 @@ const tagDefinitions: TagDefinition[] = [
   { short: 'Condition', full: 'Condition', type: 'scalar' },
 ];
 
+/**
+ * Merge keys (`<<:`) are resolved by cfn-include itself, not by js-yaml 5's
+ * built-in mergeTag. The built-in machinery only accepts merge sources whose
+ * NODE is an (alias to an) untagged mapping — it throws "cannot merge
+ * mappings" for `<<: !Include common.yml`, which js-yaml 4 supported (v4
+ * merged whatever the value RESOLVED to). So our merge tag resolves a plain
+ * `<<` key to this sentinel string, mappings accumulate it like any other
+ * key, and resolveMerges() in yaml.ts applies v4 merge semantics post-parse.
+ * The NUL bytes make an accidental collision with real template data
+ * effectively impossible (NUL is not representable in plain YAML scalars).
+ */
+export const MERGE_SENTINEL = '\u0000Fn::MergeKey\u0000';
+
+function addPairMergeAware(
+  carrier: Record<string, unknown>,
+  key: unknown,
+  value: unknown,
+  complexKeyError: string,
+): string {
+  if (key !== null && typeof key === 'object') {
+    return complexKeyError;
+  }
+  const normalizedKey = String(key);
+  if (normalizedKey === MERGE_SENTINEL) {
+    // Accumulate every `<<:` in this mapping (YAML 1.1 allows repeats);
+    // resolveMerges() flattens and applies them in order.
+    const pending = (carrier[MERGE_SENTINEL] as unknown[] | undefined) ?? [];
+    pending.push(value);
+    carrier[MERGE_SENTINEL] = pending;
+    return '';
+  }
+  if (normalizedKey === '__proto__') {
+    Object.defineProperty(carrier, normalizedKey, {
+      value,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
+  } else {
+    carrier[normalizedKey] = value;
+  }
+  return '';
+}
+
+// `has` must deny the sentinel so repeated `<<:` keys skip the core
+// duplicated-mapping-key check (they accumulate in addPairMergeAware instead).
+function hasMergeAware(carrier: Record<string, unknown>, key: unknown): boolean {
+  if (key !== null && typeof key === 'object') return false;
+  const normalizedKey = String(key);
+  if (normalizedKey === MERGE_SENTINEL) return false;
+  return Object.prototype.hasOwnProperty.call(carrier, normalizedKey);
+}
+
+// Replaces js-yaml's mergeTag: same implicit resolution of a plain `<<` (a
+// quoted "<<" stays a literal key), but yields MERGE_SENTINEL instead of the
+// core MERGE_KEY symbol so the core merge machinery never runs.
+const cfnMergeTag = defineScalarTag<string>('tag:yaml.org,2002:merge', {
+  implicit: true,
+  implicitFirstChars: ['<'],
+  resolve: (source, isExplicit) =>
+    source === '<<' || (isExplicit && source === '') ? MERGE_SENTINEL : NOT_RESOLVED,
+});
+
+// Replaces js-yaml's default map tag: identical construction/dump behavior,
+// plus MERGE_SENTINEL accumulation for plain mappings.
+function isPlainObjectValue(v: unknown): boolean {
+  if (v === null || typeof v !== 'object') return false;
+  const proto = Object.getPrototypeOf(v);
+  return proto === Object.prototype || proto === null;
+}
+
+const mergeAwareMapTag = defineMappingTag<Record<string, unknown>, Record<string, unknown>>(
+  'tag:yaml.org,2002:map',
+  {
+    create: () => ({}),
+    identify: isPlainObjectValue,
+    represent: (data: Record<string, unknown>) => {
+      const map = new Map<unknown, unknown>();
+      for (const key of Object.keys(data)) map.set(key, data[key]);
+      return map;
+    },
+    addPair: (carrier, key, value) =>
+      addPairMergeAware(carrier, key, value, 'object-based map does not support complex keys'),
+    has: hasMergeAware,
+    keys: (result) => Object.keys(result),
+    get: (result, key) => result[String(key)],
+  },
+);
+
 // js-yaml 5 replaced the v4 `new yaml.Type(tag, { kind, construct })` API with
 // per-kind builder factories (defineScalarTag / defineSequenceTag /
 // defineMappingTag). All our tags do the same thing construct() did before:
@@ -121,24 +210,14 @@ const tags: YamlTagDefinition[] = tagDefinitions.map((fn) => {
     case 'mapping':
       return defineMappingTag<Record<string, unknown>, Record<string, unknown>>(tagName, {
         create: () => ({}),
-        addPair: (carrier, key, value) => {
-          if (key !== null && typeof key === 'object') {
-            return `${tagName} does not support complex mapping keys`;
-          }
-          const normalizedKey = String(key);
-          if (normalizedKey === '__proto__') {
-            Object.defineProperty(carrier, normalizedKey, {
-              value,
-              enumerable: true,
-              configurable: true,
-              writable: true,
-            });
-          } else {
-            carrier[normalizedKey] = value;
-          }
-          return '';
-        },
-        has: (carrier, key) => Object.prototype.hasOwnProperty.call(carrier, String(key)),
+        addPair: (carrier, key, value) =>
+          addPairMergeAware(
+            carrier,
+            key,
+            value,
+            `${tagName} does not support complex mapping keys`,
+          ),
+        has: hasMergeAware,
         keys: (result) => Object.keys(result),
         get: (result, key) => result[String(key)],
         finalize: (carrier) => wrap(carrier),
@@ -195,7 +274,8 @@ const v4SetTag = defineMappingTag<Record<string, null>, Record<string, null>>(
 // re-add all of them to keep v4 parse behavior. test/yaml-conformance.test.ts
 // pins the resulting baseline; keep it in sync with any schema change here.
 const yamlSchema = CORE_SCHEMA.withTags([
-  mergeTag,
+  cfnMergeTag,
+  mergeAwareMapTag,
   timestampTag,
   binaryTag,
   omapTag,

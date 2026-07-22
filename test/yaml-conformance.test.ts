@@ -193,6 +193,60 @@ const sections: Record<string, ConformanceCase[]> = {
       expected: { b: { x: 1 }, v: { 'Fn::Sub': { x: 1, y: 2 } } },
     },
     {
+      // v4 merged whatever the source RESOLVED to, so `<<: !Include x` merges
+      // {Fn::Include: x} into the parent and the include engine then expands
+      // it in place — THE cross-file merge idiom. js-yaml 5's core merge
+      // machinery rejects tagged sources; resolveMerges() restores this.
+      name: 'merge of a scalar-tagged source (<<: !Include)',
+      yaml: 'v:\n  <<: !Include common.yml\n  b: 2',
+      expected: { v: { 'Fn::Include': 'common.yml', b: 2 } },
+    },
+    {
+      name: 'merge of a mapping-tagged source',
+      yaml: 'v:\n  <<: !Include {location: common.yml}\n  b: 2',
+      expected: { v: { 'Fn::Include': { location: 'common.yml' }, b: 2 } },
+    },
+    {
+      name: 'merge via alias to a tagged node',
+      yaml: 'x: &x !Include common.yml\nv:\n  <<: *x\n  b: 2',
+      expected: { x: { 'Fn::Include': 'common.yml' }, v: { 'Fn::Include': 'common.yml', b: 2 } },
+    },
+    {
+      name: 'merge of an inline (non-alias) map',
+      yaml: 'v:\n  <<: {a: 1}\n  b: 2',
+      expected: { v: { a: 1, b: 2 } },
+    },
+    {
+      name: 'repeated << keys — earlier wins',
+      yaml: 'a: &a {x: 1, y: 1}\nb: &b {y: 2, z: 2}\nv:\n  <<: *a\n  <<: *b',
+      expected: { a: { x: 1, y: 1 }, b: { y: 2, z: 2 }, v: { x: 1, y: 1, z: 2 } },
+    },
+    {
+      name: 'explicit key before << still wins',
+      yaml: 'b: &b {x: 1, y: 2}\nv:\n  x: 9\n  <<: *b',
+      expected: { b: { x: 1, y: 2 }, v: { x: 9, y: 2 } },
+    },
+    {
+      name: 'merge in a flow mapping',
+      yaml: 'b: &b {x: 1}\nv: {<<: *b, c: 3}',
+      expected: { b: { x: 1 }, v: { x: 1, c: 3 } },
+    },
+    {
+      name: 'explicit !!merge tag',
+      yaml: 'b: &b {x: 1}\nv:\n  !!merge <<: *b\n  c: 3',
+      expected: { b: { x: 1 }, v: { x: 1, c: 3 } },
+    },
+    {
+      name: '<< in value position stays a string',
+      yaml: 'v: <<',
+      expected: { v: '<<' },
+    },
+    {
+      name: '<< as a sequence item stays a string',
+      yaml: '- <<',
+      expected: ['<<'],
+    },
+    {
       name: 'merge source containing a tagged node',
       yaml: 'b: &b {r: !Ref Foo}\nv:\n  <<: *b\n  y: 2',
       expected: { b: { r: { Ref: 'Foo' } }, v: { r: { Ref: 'Foo' }, y: 2 } },
@@ -262,4 +316,17 @@ describe('yaml conformance (js-yaml 4 DEFAULT_SCHEMA parity)', () => {
       }
     });
   }
+
+  describe('unmergeable sources throw (v4 parity)', () => {
+    const bad: Array<[string, string]> = [
+      ['plain scalar source', 'v:\n  <<: foo\n  b: 2'],
+      ['null source', 'v:\n  <<:\n  b: 2'],
+      ['alias to plain scalar', 'x: &x foo\nv:\n  <<: *x\n  b: 2'],
+    ];
+    for (const [name, yaml] of bad) {
+      it(name, () => {
+        expect(() => load(yaml)).toThrow(/cannot merge mappings/);
+      });
+    }
+  });
 });
