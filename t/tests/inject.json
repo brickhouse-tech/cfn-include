@@ -35,7 +35,7 @@
       "template": {
         "Fn::Include": "includes/yaml/inject/injectParent.yml"
       },
-      "output": ["deep", "fnsub", "include", "malformed", "tags"]
+      "output": ["deep", "fnsub", "include", "malformed", "merge-keys", "tags"]
     }
   ]
 }

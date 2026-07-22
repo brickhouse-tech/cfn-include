@@ -1,8 +1,14 @@
 import {
   CORE_SCHEMA,
+  binaryTag,
   defineMappingTag,
   defineScalarTag,
   defineSequenceTag,
+  mergeTag,
+  omapTag,
+  pairsTag,
+  setTag,
+  timestampTag,
   type TagDefinition as YamlTagDefinition,
 } from 'js-yaml';
 import _ from 'lodash';
@@ -166,8 +172,19 @@ export const BANG_AMAZON_FUNCS = [
 export const EXPLICIT_AMAZON_FUNCS = BANG_AMAZON_FUNCS.map((f) => `Fn::${f}`);
 
 // v4's yaml.DEFAULT_SCHEMA.extend(tags) → v5's CORE_SCHEMA.withTags(tags).
-// CORE is the v5 equivalent of the v4 default (YAML 1.2 core types).
-const yamlSchema = CORE_SCHEMA.withTags(tags);
+// v5's CORE_SCHEMA is YAML 1.2 core only; v4's DEFAULT_SCHEMA additionally
+// bundled the YAML 1.1 extras — merge keys (`<<:`), !!timestamp, !!binary,
+// !!omap, !!pairs, !!set. Templates in the wild rely on `<<:` merge keys, so
+// re-add all of them to keep v4 parse behavior.
+const yamlSchema = CORE_SCHEMA.withTags([
+  mergeTag,
+  timestampTag,
+  binaryTag,
+  omapTag,
+  pairsTag,
+  setTag,
+  ...tags,
+]);
 
 /**
  * Test the function key to make sure it's something we should process.

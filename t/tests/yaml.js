@@ -58,6 +58,26 @@ export default {
       },
     },
     {
+      // YAML 1.1 merge keys (`<<:`) — regression guard for the js-yaml 4→5
+      // upgrade, where v5's CORE_SCHEMA dropped merge-key resolution.
+      name: 'merge keys',
+      template: {
+        'Fn::Include': 'includes/yaml/merge-keys.yml',
+      },
+      output: {
+        Defaults: { InstanceType: 't3.micro', Monitoring: true },
+        Overrides: { Monitoring: false, EbsOptimized: true },
+        Single: { InstanceType: 't3.micro', Monitoring: true, Name: 'single' },
+        Multi: {
+          InstanceType: 't3.micro',
+          Monitoring: true,
+          EbsOptimized: true,
+          Name: 'multi',
+        },
+        Precedence: { InstanceType: 'm5.large', Monitoring: true },
+      },
+    },
+    {
       name: 'yaml tags',
       template: {
         'Fn::Include': 'includes/yaml/tags.yml',
