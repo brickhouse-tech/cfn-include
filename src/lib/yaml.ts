@@ -1,5 +1,5 @@
 import * as yaml from 'js-yaml';
-import yamlSchema from './schema.js';
+import yamlSchema, { MERGE_SENTINEL } from './schema.js';
 
 /**
  * Simple JSON minify - strips comments and whitespace.
@@ -50,6 +50,85 @@ function jsonMinify(json: string): string {
   return result;
 }
 
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  if (v === null || typeof v !== 'object') return false;
+  const proto = Object.getPrototypeOf(v);
+  return proto === Object.prototype || proto === null;
+}
+
+/** Collect merge sources, flattening `<<: [*a, *b]` lists and repeated `<<:` keys. */
+function flattenMergeSources(value: unknown, out: unknown[]): void {
+  if (Array.isArray(value)) {
+    for (const element of value) flattenMergeSources(element, out);
+  } else {
+    out.push(value);
+  }
+}
+
+function setKey(out: Record<string, unknown>, key: string, value: unknown): void {
+  if (key === '__proto__') {
+    Object.defineProperty(out, key, {
+      value,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
+  } else {
+    out[key] = value;
+  }
+}
+
+/**
+ * Apply YAML merge keys (`<<:`) with js-yaml 4 semantics, post-parse.
+ *
+ * The schema resolves a plain `<<` key to MERGE_SENTINEL instead of letting
+ * js-yaml 5's core merge machinery run, because the core only accepts merge
+ * sources that are (aliases to) untagged mapping NODES. v4 merged whatever
+ * the source RESOLVED to — which is what makes `<<: !Include common.yml`
+ * work. Semantics: explicit keys always win over merged keys (whether they
+ * appear before or after the `<<`), and among multiple sources the earliest
+ * wins. A `<<` in value position resolves back to the literal string "<<",
+ * as in v4. The `seen` memo preserves alias identity and terminates cycles.
+ */
+function resolveMerges(node: unknown, seen = new Map<unknown, unknown>()): unknown {
+  if (node === MERGE_SENTINEL) return '<<';
+  if (Array.isArray(node)) {
+    if (seen.has(node)) return seen.get(node);
+    const out: unknown[] = [];
+    seen.set(node, out);
+    for (const element of node) out.push(resolveMerges(element, seen));
+    return out;
+  }
+  if (isPlainObject(node)) {
+    if (seen.has(node)) return seen.get(node);
+    const out: Record<string, unknown> = {};
+    seen.set(node, out);
+    for (const [key, value] of Object.entries(node)) {
+      if (key !== MERGE_SENTINEL) {
+        setKey(out, key, resolveMerges(value, seen));
+        continue;
+      }
+      const sources: unknown[] = [];
+      flattenMergeSources(value, sources);
+      for (const source of sources) {
+        const resolved = resolveMerges(source, seen);
+        if (!isPlainObject(resolved)) {
+          throw new yaml.YAMLException(
+            'cannot merge mappings; the provided source object is unacceptable',
+          );
+        }
+        for (const [sourceKey, sourceValue] of Object.entries(resolved)) {
+          if (!Object.prototype.hasOwnProperty.call(out, sourceKey)) {
+            setKey(out, sourceKey, sourceValue);
+          }
+        }
+      }
+    }
+    return out;
+  }
+  return node;
+}
+
 export function load(res: string): unknown {
   // js-yaml 4 returned undefined for an empty document; v5 throws.
   if (res.trim() === '') return undefined;
@@ -63,7 +142,7 @@ export function load(res: string): unknown {
     return JSON.parse(jsonMinify(res));
   } catch (jsonErr) {
     try {
-      return yaml.load(res, { schema: yamlSchema });
+      return resolveMerges(yaml.load(res, { schema: yamlSchema }));
     } catch (yamlErr) {
       const err = new Error(String([yamlErr, jsonErr]));
       err.name = 'SyntaxError';
