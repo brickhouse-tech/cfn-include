@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.27](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.26...v4.6.27) (2026-07-22)
+
+
+### Bug Fixes
+
+* **yaml:** restore YAML 1.1 merge keys (<<:) dropped in js-yaml 5 migration ([d3215c1](https://github.com/brickhouse-tech/cfn-include/commit/d3215c1c5d17837a7bf718422b6c6ecfe6323738))
+
 ## [4.6.26](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.25...v4.6.26) (2026-07-22)
 
 
