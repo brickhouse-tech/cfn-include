@@ -7,7 +7,6 @@ import {
   mergeTag,
   omapTag,
   pairsTag,
-  setTag,
   timestampTag,
   type TagDefinition as YamlTagDefinition,
 } from 'js-yaml';
@@ -171,18 +170,37 @@ export const BANG_AMAZON_FUNCS = [
 
 export const EXPLICIT_AMAZON_FUNCS = BANG_AMAZON_FUNCS.map((f) => `Fn::${f}`);
 
+// v5's built-in setTag constructs a JS Set, which JSON-serializes to {} —
+// templates are ultimately JSON, so keep v4's plain-object form
+// ({key: null, ...}) instead.
+const v4SetTag = defineMappingTag<Record<string, null>, Record<string, null>>(
+  'tag:yaml.org,2002:set',
+  {
+    create: () => ({}),
+    addPair: (carrier, key, value) => {
+      if (value !== null) return 'cannot resolve a set item';
+      carrier[String(key)] = null;
+      return '';
+    },
+    has: (carrier, key) => Object.prototype.hasOwnProperty.call(carrier, String(key)),
+    keys: (result) => Object.keys(result),
+    get: () => null,
+  },
+);
+
 // v4's yaml.DEFAULT_SCHEMA.extend(tags) → v5's CORE_SCHEMA.withTags(tags).
 // v5's CORE_SCHEMA is YAML 1.2 core only; v4's DEFAULT_SCHEMA additionally
 // bundled the YAML 1.1 extras — merge keys (`<<:`), !!timestamp, !!binary,
 // !!omap, !!pairs, !!set. Templates in the wild rely on `<<:` merge keys, so
-// re-add all of them to keep v4 parse behavior.
+// re-add all of them to keep v4 parse behavior. test/yaml-conformance.test.ts
+// pins the resulting baseline; keep it in sync with any schema change here.
 const yamlSchema = CORE_SCHEMA.withTags([
   mergeTag,
   timestampTag,
   binaryTag,
   omapTag,
   pairsTag,
-  setTag,
+  v4SetTag,
   ...tags,
 ]);
 
