@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.28](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.27...v4.6.28) (2026-07-22)
+
+
+### Bug Fixes
+
+* **yaml:** v4-parity merge-key resolution — support tagged merge sources (<<: !Include) ([322b8cb](https://github.com/brickhouse-tech/cfn-include/commit/322b8cbc2c66bb6eef4dd4330cc2940a6ff68a76))
+
+
+### Tests
+
+* **yaml:** add conformance suite pinning js-yaml 4 parse-behavior parity ([ef67956](https://github.com/brickhouse-tech/cfn-include/commit/ef679565b4a5cde8b0e7060d5f3c43ef8fd912c9))
+
 ## [4.6.27](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.26...v4.6.27) (2026-07-22)
 
 
