@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.29](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.28...v4.6.29) (2026-07-23)
+
+
+### Bug Fixes
+
+* **deps:** bump fast-uri from 3.1.2 to 3.1.4 ([6154449](https://github.com/brickhouse-tech/cfn-include/commit/61544497599148cc1913d09e83c2257b8113edde))
+
 ## [4.6.28](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.27...v4.6.28) (2026-07-22)
 
 
