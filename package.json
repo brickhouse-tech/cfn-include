@@ -84,7 +84,7 @@
     "js-yaml": "^5.2.1",
     "lodash": "^4.17.21",
     "proxy-agent": "8.0.2",
-    "yargs": "~18.0.0"
+    "yargs": "~18.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^21",
@@ -94,7 +94,7 @@
     "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^4.0.18",
     "better-npm-audit": "3.11.0",
-    "commit-and-tag-version": "12",
+    "commit-and-tag-version": "13",
     "commitlint": "21",
     "eslint": "10",
     "eslint-config-prettier": "10",
