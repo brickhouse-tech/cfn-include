@@ -142,11 +142,33 @@ function hasMergeAware(carrier: Record<string, unknown>, key: unknown): boolean 
 // Replaces js-yaml's mergeTag: same implicit resolution of a plain `<<` (a
 // quoted "<<" stays a literal key), but yields MERGE_SENTINEL instead of the
 // core MERGE_KEY symbol so the core merge machinery never runs.
-const cfnMergeTag = defineScalarTag<string>('tag:yaml.org,2002:merge', {
+//
+// js-yaml 5.3 change: core merge processing is now claimed by the STANDARD
+// merge tag NAME (tag:yaml.org,2002:merge), not the MERGE_KEY symbol. If our
+// implicit `<<` handler used that name, 5.3's core merge would run first and
+// reject tagged sources (`<<: !Include x`, `<<: *aliasToTagged`) with "cannot
+// merge mappings" — the exact cross-file idiom we support. So the implicit
+// handler lives under a private tag name (5.3 leaves it alone → sentinel path
+// works for every source), and explicit `!!merge` keeps the standard name.
+const cfnMergeResolve = (source: string, isExplicit: boolean) =>
+  source === '<<' || (isExplicit && source === '') ? MERGE_SENTINEL : NOT_RESOLVED;
+
+const cfnMergeTag = defineScalarTag<string>('tag:cfn-include,2002:merge', {
   implicit: true,
   implicitFirstChars: ['<'],
-  resolve: (source, isExplicit) =>
-    source === '<<' || (isExplicit && source === '') ? MERGE_SENTINEL : NOT_RESOLVED,
+  resolve: cfnMergeResolve,
+  // load-only tag: never selected when dumping (js-yaml 5.3 requires identify)
+  identify: () => false,
+});
+
+// Explicit `!!merge` keeps the standard tag name so `!!merge <<: *b` still
+// resolves. It is NOT implicit (implicit `<<` is handled above under the
+// private name), so 5.3's core merge only engages for an explicitly tagged
+// key — where the source is an ordinary untagged mapping, which core accepts.
+const cfnExplicitMergeTag = defineScalarTag<string>('tag:yaml.org,2002:merge', {
+  implicit: false,
+  resolve: cfnMergeResolve,
+  identify: () => false,
 });
 
 // Replaces js-yaml's default map tag: identical construction/dump behavior,
@@ -186,6 +208,7 @@ const tags: YamlTagDefinition[] = tagDefinitions.map((fn) => {
   switch (fn.type) {
     case 'scalar':
       return defineScalarTag<Record<string, unknown>>(tagName, {
+        identify: () => false,
         resolve: (source) => {
           let obj: unknown = source;
           if (fn.dotSyntax && _.isString(obj)) {
@@ -201,6 +224,7 @@ const tags: YamlTagDefinition[] = tagDefinitions.map((fn) => {
       });
     case 'sequence':
       return defineSequenceTag<unknown[], Record<string, unknown>>(tagName, {
+        identify: () => false,
         create: () => [],
         addItem: (carrier, item) => {
           carrier.push(item);
@@ -209,6 +233,7 @@ const tags: YamlTagDefinition[] = tagDefinitions.map((fn) => {
       });
     case 'mapping':
       return defineMappingTag<Record<string, unknown>, Record<string, unknown>>(tagName, {
+        identify: () => false,
         create: () => ({}),
         addPair: (carrier, key, value) =>
           addPairMergeAware(
@@ -255,6 +280,7 @@ export const EXPLICIT_AMAZON_FUNCS = BANG_AMAZON_FUNCS.map((f) => `Fn::${f}`);
 const v4SetTag = defineMappingTag<Record<string, null>, Record<string, null>>(
   'tag:yaml.org,2002:set',
   {
+    identify: () => false,
     create: () => ({}),
     addPair: (carrier, key, value) => {
       if (value !== null) return 'cannot resolve a set item';
@@ -275,6 +301,7 @@ const v4SetTag = defineMappingTag<Record<string, null>, Record<string, null>>(
 // pins the resulting baseline; keep it in sync with any schema change here.
 const yamlSchema = CORE_SCHEMA.withTags([
   cfnMergeTag,
+  cfnExplicitMergeTag,
   mergeAwareMapTag,
   timestampTag,
   binaryTag,
