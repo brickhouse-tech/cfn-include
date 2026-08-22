@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.46](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.45...v4.6.46) (2026-08-22)
+
+### Bug Fixes
+
+* **deps:** bump the all group with 3 updates ([e3526cf](https://github.com/brickhouse-tech/cfn-include/commit/e3526cffd3f40e7608c1098c3a9845a94b7cead7))
+* **schema:** restore <<: merge of tagged sources under js-yaml 5.3 ([70337f2](https://github.com/brickhouse-tech/cfn-include/commit/70337f258ba27c0421c66adba61cbc2dc6222cf1))
 ## [4.6.45](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.44...v4.6.45) (2026-08-20)
 
 ### Bug Fixes
