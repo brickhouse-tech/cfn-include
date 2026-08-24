@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.47](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.46...v4.6.47) (2026-08-24)
+
+### Bug Fixes
+
+* **deps:** bump @znemz/cft-utils from 0.1.68 to 0.1.69 in the all group ([d6a7adc](https://github.com/brickhouse-tech/cfn-include/commit/d6a7adcd8085bd1818134e4dfc985bce45240bd0))
 ## [4.6.46](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.45...v4.6.46) (2026-08-22)
 
 ### Bug Fixes
