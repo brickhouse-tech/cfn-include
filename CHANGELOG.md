@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.51](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.50...v4.6.51) (2026-08-28)
+
+### Bug Fixes
+
+* **deps:** bump the all group with 3 updates ([7bd56a0](https://github.com/brickhouse-tech/cfn-include/commit/7bd56a0a2233e2d0a5a2c1f3f16c7fa121f4e9de))
 ## [4.6.50](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.49...v4.6.50) (2026-08-27)
 
 ### Bug Fixes
