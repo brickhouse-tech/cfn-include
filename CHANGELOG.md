@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.53](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.52...v4.6.53) (2026-09-01)
+
+### Bug Fixes
+
+* **deps:** bump js-yaml from 5.3.0 to 5.4.0 in the all group ([e0228d5](https://github.com/brickhouse-tech/cfn-include/commit/e0228d54ec4e7b5588b6fcfcd62c46879261055f))
 ## [4.6.52](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.51...v4.6.52) (2026-09-01)
 
 ### Bug Fixes
