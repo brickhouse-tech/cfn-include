@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.79](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.78...v4.6.79) (2026-10-02)
+
+### Bug Fixes
+
+* **deps:** override basic-ftp to >=6.2.1 (GHSA quadratic list() DoS) ([0de0a24](https://github.com/brickhouse-tech/cfn-include/commit/0de0a2428e9e3b1c865a774289501bc44066f0e5)), closes [#73](https://github.com/brickhouse-tech/cfn-include/issues/73)
+
 ## [4.6.78](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.77...v4.6.78) (2026-10-02)
 
 ### Bug Fixes
