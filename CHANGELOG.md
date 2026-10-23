@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.94](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.93...v4.6.94) (2026-10-23)
+
+### Bug Fixes
+
+* **deps:** bump ip-address from 10.7.2 to 10.7.4 ([81f17c7](https://github.com/brickhouse-tech/cfn-include/commit/81f17c7b806febdb2b71366b40332af7797fa249))
+
 ## [4.6.93](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.92...v4.6.93) (2026-10-23)
 
 ### Bug Fixes
