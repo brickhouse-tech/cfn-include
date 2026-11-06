@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.104](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.103...v4.6.104) (2026-11-06)
+
+### Bug Fixes
+
+* **deps:** bump glob from 14.0.3 to 14.0.4 ([c8f93b2](https://github.com/brickhouse-tech/cfn-include/commit/c8f93b2031732fecd3fc97e2d4913125a62cc8d5))
+
 ## [4.6.103](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.102...v4.6.103) (2026-11-06)
 
 ### Bug Fixes
