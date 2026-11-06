@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.6.105](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.104...v4.6.105) (2026-11-06)
+
+### Bug Fixes
+
+* **deps:** patch glob, minimatch, and compression advisories ([e639d50](https://github.com/brickhouse-tech/cfn-include/commit/e639d50d8f64ffccbba3ea66256d7b2e43c0c224))
+
 ## [4.6.104](https://github.com/brickhouse-tech/cfn-include/compare/v4.6.103...v4.6.104) (2026-11-06)
 
 ### Bug Fixes
