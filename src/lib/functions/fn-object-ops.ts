@@ -1,7 +1,9 @@
 import _ from 'lodash';
-import deepMerge from 'deepmerge';
+import createDeepmerge from '@fastify/deepmerge';
 import sortObject from '@znemz/sort-object';
 import type { RecurseContext, RecurseFn, TemplateObject } from './types.js';
+
+const deepMerge = createDeepmerge();
 
 export function createFnOmit(recurse: RecurseFn) {
   return async (ctx: RecurseContext): Promise<any> => {
@@ -41,7 +43,12 @@ export function createFnDeepMerge(recurse: RecurseFn) {
     let mergedObj = {};
     if (json?.length) {
       for (const j of json) {
-        mergedObj = deepMerge(mergedObj, j as object);
+        if (j === null) {
+          throw new Error('Fn::DeepMerge entries must not be null');
+        }
+        if (typeof j === 'object') {
+          mergedObj = deepMerge(mergedObj, j);
+        }
       }
     }
     return recurse({ base, scope, cft: _.defaults(obj, mergedObj), rootTemplate, caller: 'Fn::DeepMerge', ...opts });

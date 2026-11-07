@@ -633,7 +633,7 @@ Fn::Merge:
 
 ## Fn::DeepMerge
 
-`Fn::DeepMerge` will deeply merge an array of objects and arrays into a single object. See [deepmerge](https://www.npmjs.com/package/deepmerge) for details on its behavior. This function is useful if you want to add functionality to an existing template if you want to merge objects of your template that have been created with [`Fn::Map`](#fnmap).
+`Fn::DeepMerge` will deeply merge an array of objects and arrays into a single object. See [@fastify/deepmerge](https://www.npmjs.com/package/@fastify/deepmerge) for details on its behavior. This function is useful if you want to add functionality to an existing template if you want to merge objects of your template that have been created with [`Fn::Map`](#fnmap).
 
 `Fn::DeepMerge` accepts a list of objects that will be merged together. You can use other `cfn-include` functions such as `Fn::Include` to pull in template from remote locations such as S3 buckets.
 
