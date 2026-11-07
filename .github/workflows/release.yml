@@ -38,7 +38,7 @@ jobs:
           git config --local user.email "creadbot@github.com"
           git config --local user.name "creadbot_github"
 
-          npm install
+          npm ci
 
           # Check for breaking changes in commits since last tag
           # Look for feat!:, fix!:, or BREAKING CHANGE in commit messages
