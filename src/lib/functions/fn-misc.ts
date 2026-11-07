@@ -1,13 +1,15 @@
 import path from 'node:path';
 import _ from 'lodash';
 import { glob } from 'glob';
-import deepMerge from 'deepmerge';
+import createDeepmerge from '@fastify/deepmerge';
 import { isTaggableResource } from '@znemz/cft-utils/src/resources/taggable.js';
 import replaceEnv from '../replaceEnv.js';
 import parseLocation from '../parselocation.js';
 import { getAwsPseudoParameters, buildResourceArn } from '../internals.js';
 import type { RecurseContext, RecurseFn, TemplateObject, TemplateValue } from './types.js';
 import type { Resource } from '../../types/index.js';
+
+const deepMerge = createDeepmerge();
 
 export function createFnGetEnv() {
   return async (ctx: RecurseContext): Promise<any> => {

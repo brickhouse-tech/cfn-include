@@ -42,6 +42,7 @@ const TEST_FILES = [
   'lodash.yml',
   'sequence.yml',
   'deepmerge.yml',
+  'deepmergeEdge.js',
   'extendedmaps.json',
   'omit.json',
   'omitEmpty.json',
