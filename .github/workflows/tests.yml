@@ -22,7 +22,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           # cache: "npm" # needs lockfile if enabled
 
-      - run: npm install
+      - run: npm ci
       - run: npm run lint
       - run: npm test
       # Note: S3 tests (test/s3.test.ts) are skipped when AWS credentials are not available
@@ -39,7 +39,7 @@ jobs:
           node-version: '22.x'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build package
         run: npm run build
