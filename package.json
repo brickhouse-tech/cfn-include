@@ -96,7 +96,7 @@
     "@types/lodash": "^4.17.23",
     "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^5.0.0",
-    "better-npm-audit": "4.0.0",
+    "better-npm-audit": "4.2.1",
     "commit-and-tag-version": "13",
     "commitlint": "21",
     "eslint": "10",
